@@ -1,0 +1,54 @@
+[project]
+name = "deskpal"
+version = "0.1.0"
+description = "Host-side tools and experiments for DeskPal, a tracked desk robot (IN5590)."
+authors = [
+    { name = "Martin Haugen" },
+    { name = "Markus Yuki Nishimura" },
+]
+requires-python = ">=3.13"
+dependencies = [
+    "hydra-core>=1.3.7,<1.4",
+]
+
+[project.scripts]
+deskpal-experiment = "deskpal.experiment:main"
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "pre-commit>=4.4",
+    "pytest>=9.1.1",
+    "ruff>=0.17.0",
+]
+
+[tool.ruff]
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Defaults (E4, E7, E9, F) plus import sorting, bugbear, pyupgrade, simplify
+# and docstrings. Avoids rules that conflict with the formatter.
+extend-select = ["I", "B", "UP", "SIM", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
+markers = [
+    "slow: long-running tests",
+    "hardware: needs the real robot connected (hardware-in-the-loop)",
+]

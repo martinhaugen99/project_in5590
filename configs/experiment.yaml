@@ -1,0 +1,13 @@
+# Primary config for `uv run deskpal-experiment`.
+# Add experiment parameters here, or in config groups (subfolders of configs/).
+# Physical values (speeds, thresholds, distances) must cite their source in docs/.
+
+name: example # short experiment name, used in the run folder path
+notes: "" # free-text note saved with the run
+
+hydra:
+  run:
+    dir: outputs/${name}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: multirun/${name}/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}
