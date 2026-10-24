@@ -1,7 +1,7 @@
 """Example Hydra entry point for robot experiments.
 
-Run it with ``uv run deskpal-experiment`` and override config values on the
-command line, for example ``uv run deskpal-experiment name=stopping_distance``.
+Run it with ``uv run mats-experiment`` and override config values on the
+command line, for example ``uv run mats-experiment name=stopping_distance``.
 Each run gets its own folder under ``outputs/`` with the resolved config, the
 command-line overrides, the git state and the log.
 """

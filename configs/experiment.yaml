@@ -1,4 +1,4 @@
-# Primary config for `uv run deskpal-experiment`.
+# Primary config for `uv run mats-experiment`.
 # Add experiment parameters here, or in config groups (subfolders of configs/).
 # Physical values (speeds, thresholds, distances) must cite their source in docs/.
 

@@ -1,7 +1,7 @@
 [project]
-name = "deskpal"
+name = "mats"
 version = "0.1.0"
-description = "Host-side tools and experiments for DeskPal, a tracked desk robot (IN5590)."
+description = "Host-side tools and experiments for M.A.T.S, a tracked desk-cleaning robot (IN5590)."
 authors = [
     { name = "Martin Haugen" },
     { name = "Markus Yuki Nishimura" },
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-deskpal-experiment = "deskpal.experiment:main"
+mats-experiment = "mats.experiment:main"
 
 [build-system]
 requires = ["uv_build>=0.10.4,<0.11.0"]

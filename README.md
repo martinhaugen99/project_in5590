@@ -1,6 +1,6 @@
-# DeskPal
+# M.A.T.S
 
-DeskPal is a small animatronic desk robot on tracks, built for IN5590 (Rapid Prototyping of Robotic Systems) at UiO. It shows emotions on a display, follows its person, and must never drive off the table. This repository holds the CAD, electronics, firmware, host-side tools and documentation.
+M.A.T.S (Mechanized Assistant for Tabletop Sanitation) is a small animatronic robot on tracks that cleans a desk, built for IN5590 (Rapid Prototyping of Robotic Systems) at UiO. It pushes debris with a brush to the table edge, lowers a bucket over the edge and pushes the debris into it. A face on a display shows what it is doing and what it needs, and it must never drive off the table. This repository holds the CAD, electronics, firmware, host-side tools and documentation.
 
 ## Repository layout
 
@@ -8,7 +8,7 @@ DeskPal is a small animatronic desk robot on tracks, built for IN5590 (Rapid Pro
 project_in5590/
 ├── configs/            # Hydra configs for experiments
 ├── docs/               # Deliverables, decisions, experiment reports
-├── src/deskpal/        # Host-side Python package (experiments, analysis, tools)
+├── src/mats/           # Host-side Python package (experiments, analysis, tools)
 ├── tests/              # Host-side tests (pytest)
 ├── bom.csv             # Bill of materials
 ├── pyproject.toml      # Python project, dependencies and tool settings
@@ -53,12 +53,12 @@ Both commands update `pyproject.toml` and `uv.lock`. Commit both files together.
 
 ## Running experiments (Hydra)
 
-Experiments are configured with [Hydra](https://hydra.cc/docs/1.3/intro/). The example entry point is `src/deskpal/experiment.py`, with its config in `configs/experiment.yaml`.
+Experiments are configured with [Hydra](https://hydra.cc/docs/1.3/intro/). The example entry point is `src/mats/experiment.py`, with its config in `configs/experiment.yaml`.
 
 ```bash
-uv run deskpal-experiment                                   # default config
-uv run deskpal-experiment name=stopping_distance notes="first try"
-uv run deskpal-experiment --multirun notes=a,b              # one run per value
+uv run mats-experiment                                      # default config
+uv run mats-experiment name=stopping_distance notes="first try"
+uv run mats-experiment --multirun notes=a,b                 # one run per value
 ```
 
 Each run gets its own folder, `outputs/<name>/<date>_<time>/` (or `multirun/<name>/<date>_<time>/<job>/`), containing:

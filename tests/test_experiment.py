@@ -1,6 +1,6 @@
 from hydra import compose, initialize_config_dir
 
-from deskpal.experiment import CONFIG_DIR, git_state
+from mats.experiment import CONFIG_DIR, git_state
 
 
 def test_experiment_config_composes_with_override() -> None:
