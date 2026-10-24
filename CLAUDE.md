@@ -182,6 +182,7 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 
 ### Mechanical & 3D printing
 - Parametric CAD: drive the key dimensions (motor mounts, track width, display cutout, sensor positions, wall thickness, clearances) from named parameters.
+- Each CAD module has one owner (`cad/README.md`). Dimensions shared between modules are listed in `docs/cad_parameters.md`, and each part holds them as its own global variables with the same names. No linked equation files (D012).
 - For each printed part, record the printer, material, nozzle, layer height, infill, orientation, supports and tested clearances.
 - Mount the edge sensors ahead of the tracks by more than the *measured* stopping distance at top speed.
 - Keep the center of gravity low and between the tracks, also in the worst pose (bucket lowered past the edge and full, brush pushed forward). Check it in CAD using real component masses.

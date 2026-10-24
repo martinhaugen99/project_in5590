@@ -15,6 +15,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D009 | 2026-10-22 | Display and the seven states | Accepted |
 | D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Accepted |
 | D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
+| D012 | 2026-10-24 | CAD: module owners and a table of shared dimensions | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -415,6 +416,45 @@ Option 3:
 - GitHub limits LFS storage and bandwidth, so commit CAD files at useful points, not after every save.
 - STEP and STL files larger than 3000 KB are still blocked by the hook. Adding them to Git LFS needs a new decision.
 - The trailing-whitespace and end-of-file hooks skip `cad/`, so they do not rewrite exported STEP files.
+
+## D012: CAD: module owners and a table of shared dimensions
+
+- **Date:** 2026-10-24
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+Martin and Yuki both make SolidWorks parts (D011). `CLAUDE.md` asks for key dimensions driven by named parameters, and parts in different modules must agree on shared dimensions, such as the bucket shaft diameter and its pivot position. The first plan was one text file of global variables, linked into every part. Martin tested it in SolidWorks 2026 on 2026-10-24, with the text file in a test folder and two parts in its subfolders:
+- A value changed in the file updated both parts after a rebuild. Saving the parts did not write their own equations into the file.
+- After the folder was copied to another path, the copied parts still linked to the file at the original path, with no warning. In a clone in another folder, the parts would point to the path on Martin's machine.
+- A global variable added to the file did not reach the parts on rebuild. It has to be imported again in each part.
+
+The [2025 help](https://help.solidworks.com/2025/english/SolidWorks/sldworks/t_eqn_creating_equations_in_a_text_file.htm) also says not to share one linked file between several models.
+
+### Options
+
+1. One linked text file of global variables for all parts (tested above).
+2. Global variables in the top assembly that drive the part dimensions through assembly equations. Not tested.
+3. One owner per module, and a table of shared dimensions in `docs/`. Each part holds the values it uses as its own global variables.
+
+### Choice
+
+Option 3:
+- Each module folder in `cad/` has one owner, who creates and edits its parts and subassembly. Martin owns `mats.SLDASM`, `layout.SLDPRT` and the STEP exports. The module owners are not decided yet. They are filled in in `cad/README.md` when decided.
+- `docs/cad_parameters.md` lists each shared dimension once, with its value, owner, the parts that use it and its source. It also lists the measured masses.
+- Each part has global variables with the same names as in the table, and drives its dimensions from them.
+
+### Reasons
+
+- Option 1 breaks without warning in a clone in another folder, and each new variable must be imported by hand in every part.
+- With option 2, the top assembly drives parts that the other person owns, so a change in the top assembly needs their locks.
+- With one owner per module, two people rarely need the same file. Each module has its own subassembly, so changes stay in the owner's folder.
+
+### Consequences
+
+- A shared value changes in steps: its owner updates the table, commits and pushes it, and tells the other person, and each owner updates their own parts. Until then, the table and the parts can disagree. Interference Detection in the top assembly catches parts that no longer fit.
+- The lock workflow of D011 still applies, mainly to `mats.SLDASM` and `layout.SLDPRT`.
 
 ## Template
 
