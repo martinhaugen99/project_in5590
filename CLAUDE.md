@@ -5,55 +5,60 @@ Items marked **TBD** are open design decisions. They are settled through `docs/d
 
 ## Project overview
 
-This project builds an animatronic tabletop robot from scratch. The robot shows emotions on a display, drives on tracks (belts), can follow a target such as a person, and must never drive off the table. The work covers component selection, CAD, 3D printing, electronics, firmware and software, integration and experiments. It is the course project for IN5590 (Rapid Prototyping of Robotic Systems) at UiO.
+This project builds an animatronic tabletop robot from scratch. The robot shows emotions on a display, drives on tracks (belts), can clean a target such as a desk, and must never drive off the table. The work covers component selection, CAD, 3D printing, electronics, firmware and software, integration and experiments. It is the course project for IN5590 (Rapid Prototyping of Robotic Systems) at UiO.
 
-Build window: early October → mid November, ending with a public demo. Weigh every decision against that deadline. A robot that reliably shows emotions and stays on the table on demo day beats a person-follower that almost works.
+Build window: early October → late November, ending with a public demo November 30th. Weigh every decision against that deadline. A robot that reliably shows emotions and stays on the table while cleaning on demo day is the ultimate goal.
 
-Logical architecture. It holds whatever hardware is chosen, and the two layers may run on one chip or on two:
+Logical architecture. Both layers run on the two cores of the microcontroller (D004):
 ```
-edge sensors ──► LOW LEVEL: edge reflex, motor control, watchdog ──► motor driver ──► tracks
-                      ▲ commands                │ state / events
-target sensor ──► HIGH LEVEL: target detection, behaviour, emotion state ──► display renderer
+edge sensors (2), encoders, ──► LOW LEVEL ───────────────────► driver chip 1 ──► track motors (rear sprockets)
+actuator position, IMU          edge reflex, dump interlock, ──► servo signals ──► brush-arm and bucket-arm servos
+                                motor, servo and actuator    ──► driver chip 2 ──► linear actuator (brush push)
+                                control, watchdog
+                                   ▲ commands     │ state / events
+buttons ──────────────────► HIGH LEVEL: cleaning behavior, emotion state ──► display renderer
 ```
 
 ## Requirements (draft)
 
-- **Must:** show at least 6 emotions that people can tell apart (neutral, happy, sad, angry, surprised, scared); drive forward, reverse and turn in place on tracks; detect the table edge and stop or back away before any part of a track leaves the surface, at every reachable speed; have a physical switch that cuts motor power.
-- **Should:** detect and follow a target while staying on the table; react to events with emotions (target found/lost, edge detected, picked up, obstacle).
-- **Could:** extra animatronic motion (e.g. a servo that tilts the display); sound.
-- **Priority when goals conflict:** edge safety > motor cut-off > obstacle avoidance > following > expression. A person standing beside the table is *beyond the edge* from the robot's point of view, so following and edge avoidance conflict all the time, not just in rare cases. Following never overrides the edge stop.
+- **Must:** show at least 7 states that people can tell apart (neutral, working, happy, sad, surprised, scared, angry); drive forward, reverse and turn in place on tracks; detect the table edge and stop or back away before any part of a track leaves the surface, at every reachable speed; run one dump cycle at the press of a button (lower the brush, drive to the edge, square up, lower the bucket, push, stow, back away), with the tracks locked while the bucket is lowered or the brush is pushed forward; reach past the table edge with the bucket, keep it upright and never tip the robot; have a physical switch that cuts motor power.
+- **Should:** clean a table on its own by repeating the dump cycle along different edges; raise the collection rate to at least 80 % by mass through tuning (the optimization task); react to events with the states (dump cycle done, bucket full, picked up, unplanned edge, blocked).
+- **Could:** a camera that finds dirty spots.
+- **Priority when goals conflict:** edge safety > motor cut-off > cleaning > expression. M.A.T.S drives to the edge on purpose on every dump cycle, so cleaning and edge avoidance conflict all the time, not just in rare cases. The dump cycle never overrides the edge stop or the dump interlock.
 
-## Hardware (current state: nothing chosen; verify before relying on it)
+## Hardware (chosen in D004–D010; verify against the datasheets before relying on it)
 
-| Area | Options to evaluate | Status |
+| Area | Choice | Decision |
 |---|---|---|
-| Compute architecture | MCU only · SBC only · SBC (vision) + MCU (motors, sensors) | TBD |
-| Microcontroller | e.g. ESP32-S3, RP2040/RP2350, STM32 | TBD |
-| Single-board computer (if any) | e.g. Raspberry Pi 5 | TBD |
-| Display | small SPI TFT or round LCD, OLED, phone/tablet | TBD |
-| Target detection | camera + on-board model, smart camera module, beacon (UWB/IR) | TBD |
-| Edge sensing | downward IR reflectance, ToF distance, mechanical feeler | TBD |
-| Motors + driver | geared DC motors with encoders, steppers; matching driver | TBD |
-| Tracks | printed (e.g. TPU) vs bought; sprockets, tensioner | TBD |
-| Power | chemistry and cell count, BMS, charging, regulation, fuse | TBD |
+| Compute architecture | MCU only: both layers on the two cores of the microcontroller. A laptop on USB powers it and logs data | D004 |
+| Microcontroller | [Arduino Nano ESP32](https://store.arduino.cc/products/nano-esp32): ESP32-S3, 3.3 V logic | D004 |
+| Single-board computer | None for the Must and Should goals | D004 |
+| Display | 2.8" SPI TFT module, ILI9341 controller, 240 × 320 pixels (board V1.2), in a fixed head. Datasheet not yet linked | D009 |
+| Dirt detection (Could) | Raspberry Pi 5 with a Raspberry Pi camera | D004 |
+| Edge sensing | 2 × VL53L4CD time-of-flight sensors ([ST SATEL-VL53L4CD](https://no.rs-online.com/web/p/sensor-development-tools/2410906), RS 241-0906) on the brush bracket, one ahead of each track. No rear sensors | D007 |
+| Motors + driver | 2 × [DAGU DG01D 48:1](https://www.sparkfun.com/hobby-gearmotor-140-rpm-pair.html) gearmotors, about 140 RPM without load, suggested 4.5 V; 2 × Yumo E6A2-CW3C encoders, 200 pulses per turn, open collector ([datasheet](https://www.fa.omron.co.jp/data_pdf/cat/e6a2-c_ds_e_8_2_csm490.pdf)); 2 × [TI L293DNE](https://www.ti.com/lit/gpn/l293d), one for the track motors, one for the linear actuator | D006 |
+| Tracks | Printed TPU bands with teeth on the inside, printed PLA sprockets with guide ridges, front sprocket in a slotted mount for tension | D006 |
+| Arm actuators | 2 × [DFRobot SER0006](https://www.dfrobot.com/product-255.html) micro servos (180°) for the brush arm and the bucket arms, plus a larger lab servo as a spare; [Actuonix PQ12-100-12-P](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf) linear actuator, 20 mm stroke, 12 V, position feedback | D008 |
+| IMU | [SparkFun OpenLog Artemis](https://www.sparkfun.com/sparkfun-openlog-artemis.html) with its built-in ICM-20948, data over serial | D010 |
+| Power | 12 V bench supply for the actuators and the encoders, with a cut-off switch on the robot; two adjustable step-down converters for the track motors and the 5 V servos (model not yet confirmed); laptop USB for the microcontroller, edge sensors and display. No battery | D005 |
 
-When a row is decided, replace it with the chosen part, its key specs and a datasheet link, plus the decision ID (D###).
-- Already on hand or provided by the lab: [FILL IN: parts you own, printer model(s), filament types, CNC access]
-- Budget: [FILL IN: amount in NOK, and who pays/orders]
+When a choice changes, record it in a new decision entry and update its row with the part, its key specs, a datasheet link and the decision ID (D###).
+- Already on hand or provided by the lab: every part in `bom.csv` with status `lab` (confirmed 2026-10-24); printer Isaac (Creality Ender-3 V3 SE); PLA and TPU filament; CNC access
+- Budget: unknown, faculty decides. Parts the lab does not have are requested from the faculty with links to RS, Farnell or Digikey, and the faculty decides whether to buy them (`docs/ASSIGNMENT.md`). Items to order have status `to_order` in `bom.csv`.
 
 ## Key technologies
 
 - **No Docker.** Every part of the project uses a project-local, pinned environment, and nothing is installed globally on the host (see "Environment setup").
 - CAD: SolidWorks, AutoDesk
-- Firmware toolchain and language: TBD (follows the MCU decision)
-- High-level language and framework (ROS 2 or not): TBD
-- Host-side Python (experiments, analysis, tools): package `deskpal` in `src/deskpal/`, Python 3.13.
+- Firmware toolchain and language: TBD (the MCU is the Arduino Nano ESP32, D004)
+- High-level language and framework: the high level runs on the microcontroller next to the low level (D004), with no separate high-level computer or framework.
+- Host-side Python (experiments, analysis, tools): package `mats` in `src/mats/`, Python 3.13.
   - Environment and dependencies: uv. `pyproject.toml` holds version ranges, `uv.lock` pins exact versions and is committed.
   - Formatting, linting and import sorting: ruff (the `I` rules replace isort in this project).
   - Type checking: mypy in strict mode. Tests: pytest. Git hooks: pre-commit.
   - Experiment configuration: Hydra 1.3 (`hydra-core>=1.3.7,<1.4`). See "Experiments with Hydra".
   - All tool settings live in `pyproject.toml` and `.pre-commit-config.yaml`.
-- Version control: git, hosted on [FILL IN: GitHub/GitLab/…]
+- Version control: git, hosted on GitHub (`martinhaugen99/project_in5590`)
 
 ## Repository layout (proposed; create folders only when needed)
 
@@ -63,15 +68,15 @@ project_in5590/
 ├── print/            # STL/3MF + print settings per part
 ├── electronics/      # Wiring diagram, schematic, pinout.md (single source of truth for pins)
 ├── firmware/         # Low-level controller code
-├── software/         # High-level code on a separate on-robot computer (only if there is one)
-├── assets/emotions/  # Source graphics/animations for each emotion
-├── src/deskpal/      # Host-side Python package (experiments, analysis, tools)
+├── software/         # Code for the Raspberry Pi 5 (only if the Could camera is added)
+├── assets/emotions/  # Source graphics/animations for each state
+├── src/mats/         # Host-side Python package (experiments, analysis, tools)
 ├── configs/          # Hydra configs for experiments
 ├── tests/            # Host-side tests
 ├── data/             # Logged experiment data (large raw files gitignored)
 ├── outputs/          # Hydra run folders (gitignored); multirun/ for sweeps
 ├── docs/             # project_plan.md, decisions.md, experiments/, report/
-├── bom.csv           # part, function, MPN, supplier, link, datasheet, qty, unit price (NOK), status
+├── bom.csv           # item, part, function, MPN, supplier, link, datasheet, qty, unit price (NOK), status
 ├── pyproject.toml    # Python project, dependencies and tool settings
 ├── uv.lock           # Exact Python package versions (committed)
 ├── .python-version   # Python version for uv
@@ -81,9 +86,9 @@ project_in5590/
 
 ## Mission & scope
 
-- Build the MVP first: drive on tracks → edge stop → emotions on the display. Following and reactions come only after the MVP works on a real table.
+- Build the MVP first: drive on tracks → edge stop → one dump cycle at the press of a button. Autonomous cleaning, the collection-rate optimization and the reactions come only after the MVP works on a real table.
 - Every experiment must be traceable to a git commit, its parameters, and the raw data.
-- Declare work complete only when firmware builds without warnings, `uv run ruff format --check .`, `uv run ruff check .`, `uv run mypy` and `uv run pytest -q` pass, and the docs reflect any change in behaviour.
+- Declare work complete only when firmware builds without warnings, `uv run ruff format --check .`, `uv run ruff check .`, `uv run mypy` and `uv run pytest -q` pass, and the docs reflect any change in behavior.
 
 ## Capabilities & limits
 
@@ -124,7 +129,7 @@ project_in5590/
 - Dev machine(s): [FILL IN: which machine is primary, its OS, and which one flashes the robot]
 - Python: uv, with Python 3.13 pinned in `.python-version`. `uv sync` creates `.venv/` from `uv.lock`. Add packages only with `uv add <pkg>` or `uv add --dev <pkg>`, and commit `pyproject.toml` and `uv.lock` together. Never use `pip install` or a global Python. uv itself is the only tool installed outside the project. It keeps a shared download cache in `~/.cache/uv`, and pre-commit keeps its hook environments in `~/.cache/pre-commit`.
 - Firmware: [FILL IN after the MCU decision: toolchain, e.g. PlatformIO, which keeps toolchains per project]
-- On-robot computer, if any: [FILL IN: OS image, how code is deployed to it]
+- On-robot computer: none (D004). If the Could camera is added: [FILL IN: OS image, how code is deployed to the Raspberry Pi 5]
 
 ### Core commands (fill in during scaffolding)
 ```bash
@@ -134,11 +139,11 @@ project_in5590/
 # Type check:             uv run mypy
 # Host-side tests:        uv run pytest -q
 # All git hooks:          uv run pre-commit run --all-files
-# Run an experiment:      uv run deskpal-experiment name=<name> [key=value ...]
+# Run an experiment:      uv run mats-experiment name=<name> [key=value ...]
 # Build firmware:         [FILL IN]
 # Flash firmware:         [FILL IN]   # hardware action: needs confirmation
 # Serial monitor / logs:  [FILL IN]
-# Run high-level code:    [FILL IN]
+# Run high-level code:    part of the firmware (D004)
 ```
 Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv run isort .` step does not apply in this project.
 
@@ -160,13 +165,16 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 - The edge check runs every loop iteration, before any motor command is applied.
 - Motors stop on invalid sensor readings, and when commands stop arriving (watchdog timeout documented in `docs/`).
 - The speed cap lives in firmware, not only in high-level code.
+- A track may move forward only while the edge sensor ahead of it sees the table. The robot reverses only along the path it has just driven, and never farther than the encoders measured on the way forward.
+- The dump interlock lives in the low level. The bucket is lowered only when the tracks are stopped and both edge sensors see the edge ahead, and the tracks stay locked until the bucket is up and the brush is back.
+- If the USB cable comes loose, pull-down resistors on the driver inputs stop the motors.
 
-### Inter-board protocol (only if there are two processors)
+### Inter-board protocol (only if there are two processors, for example when the Could camera on a Raspberry Pi 5 is added)
 - Framed with a checksum and versioned from day one (a `HELLO` message carrying the protocol version).
 - Message definitions live in a single source shared or generated for both sides, never in hand-maintained copies. Include a host-side test.
 
 ### Display & emotions
-- The behaviour layer sets one emotion state from a single shared enum, and the renderer draws it. Rendering never blocks the control loop.
+- The behavior layer sets one state from a single shared enum (the seven states in D009), and the renderer draws it. Rendering never blocks the control loop.
 
 ### Code style
 - Python: type hints, Google-style docstrings, 4-space indents, 88-character lines, f-strings, pathlib over os, ALL_CAPS constants, `_private` methods. Ruff formats, lints and sorts imports (rules: defaults + `I`, `B`, `UP`, `SIM`, `D` with the Google convention). mypy runs in strict mode. Settings live in `pyproject.toml`; change them there, not with inline flags.
@@ -176,21 +184,22 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 - Parametric CAD: drive the key dimensions (motor mounts, track width, display cutout, sensor positions, wall thickness, clearances) from named parameters.
 - For each printed part, record the printer, material, nozzle, layer height, infill, orientation, supports and tested clearances.
 - Mount the edge sensors ahead of the tracks by more than the *measured* stopping distance at top speed.
-- Keep the centre of gravity low and between the tracks. Check it in CAD using real component masses.
+- Keep the center of gravity low and between the tracks, also in the worst pose (bucket lowered past the edge and full, brush pushed forward). Check it in CAD using real component masses.
 
 ## Testing & validation
 
 - Bring up each component alone on the bench before integrating it.
-- Essential tests: the edge stop triggers at every speed; the watchdog stops the motors; every emotion renders; the protocol round-trips (if there are two processors).
+- Essential tests: the edge stop triggers at every speed; the watchdog stops the motors; the motors stop when the USB cable comes loose; the dump interlock ignores drive commands while the bucket is lowered or the brush is pushed forward; every state renders; the protocol round-trips (if there are two processors).
 - Host-side tests in `tests/` mirror the source modules. Use Arrange-Act-Assert, and mark slow or hardware-in-the-loop tests.
 - Each experiment gets `docs/experiments/NNN-name.md`: question, setup, procedure, measured quantity, pass criterion, raw data, result. Candidates:
   - edge detection across surfaces, lighting and speeds
   - stopping distance vs speed
-  - following accuracy and how often the target is lost
-  - whether people recognise each emotion
+  - reach, tipping and servo torque of the bucket arms
+  - collection rate before and after tuning (the optimization task)
+  - whether people recognize each state
 
 ### Experiments with Hydra
-- Each experiment type gets a config in `configs/` (later as config groups in subfolders) and an entry point in `src/deskpal/`. `src/deskpal/experiment.py` is the example to copy.
+- Each experiment type gets a config in `configs/` (later as config groups in subfolders) and an entry point in `src/mats/`. `src/mats/experiment.py` is the example to copy.
 - Physical values in configs (speeds, thresholds, distances) follow "Robotics conventions": their source is recorded in `docs/`, and they are never guessed.
 - Use `@hydra.main(version_base="1.3", ...)`. Pass `config_path` as an absolute path (see `CONFIG_DIR` in `experiment.py`). A relative path fails when the script runs as an installed command.
 - Every run writes `outputs/<name>/<date>_<time>/` with `.hydra/config.yaml`, `.hydra/overrides.yaml`, `git.yaml` (commit and `dirty` flag) and the log. Sweeps (`--multirun`) go to `multirun/`. Do not sweep over `name`, since it is part of the folder path.
@@ -200,12 +209,12 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 
 ## Pre-production policy
 
-Early development: no backward-compatibility shims, no deprecated code kept around, and refactors may freely change names and behaviour. Tests are updated to match immediately.
+Early development: no backward-compatibility shims, no deprecated code kept around, and refactors may freely change names and behavior. Tests are updated to match immediately.
 
 ## Git workflow
 
 - Imperative commit subjects of 50 characters or less. Keep `main` runnable and use short-lived feature branches.
-- Add tests alongside changes in behaviour.
+- Add tests alongside changes in behavior.
 - Native CAD files and large STLs: [FILL IN: Git LFS yes/no. If several people edit SolidWorks files, use LFS with `lockable` and take the lock before editing.]
 - Pre-commit hooks (`.pre-commit-config.yaml`):
   - From `pre-commit-hooks`: trailing whitespace, end of file, YAML/TOML syntax, merge conflicts, private keys, and files larger than 3000 KB.
@@ -214,10 +223,10 @@ Early development: no backward-compatibility shims, no deprecated code kept arou
 
 ## Safety
 
-- Batteries: use a protected pack or a BMS, fuse the battery output, charge only with a proper charger, and never charge unattended.
+- Power comes from a 12 V bench supply and the laptop USB, with no battery (D005). If a battery is added later: use a protected pack or a BMS, fuse the battery output, charge only with a proper charger, and never charge unattended.
 - Follow the lab's rules for the 3D printers and CNC machines.
 
 ## Governance & maintenance
 
-- Owner: Martin. Team: [FILL IN: other members, or "solo"]
+- Owner: Martin. Team: Markus Yuki Nishimura (Yuki)
 - Record decisions in `docs/decisions.md` as numbered entries (D001, D002, …) with context, options, choice and reasons. Update this file whenever a decision changes the stack or hardware.
