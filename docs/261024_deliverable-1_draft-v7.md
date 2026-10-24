@@ -5,13 +5,13 @@ Assignment 4 in IN5590,
 **Printer:** Isaac,
 **Topic:** C: Animatronics
 
-*Mechanized Assistant for Tabletop Sanitation. Revised draft, 23 October 2026. This version replaces the desk-companion proposal after the feedback on the first draft.*
+*Mechanized Assistant for Tabletop Sanitation. Revised draft, 24 October 2026. This version replaces the desk-companion proposal after the feedback on the first draft.*
 
 ---
 
 ## 1. Topic and motivation
 
-Desks collect crumbs, eraser dust and dust. Wiping them away by hand pushes the debris onto the floor or into the user's lap, and a hand vacuum is loud and must be fetched first. We will build **M.A.T.S** (Mechanized Assistant for Tabletop Sanitation), a small robot that cleans a desk on its own. It drives on tracks and pushes the debris ahead of a brush to the table edge. There it lowers a bucket on two arms over the edge, and the brush pushes the debris into the bucket. When the bucket is full, a person lifts it off, empties it and puts it back.
+Desks collect crumbs, dust and eraser debris. Wiping them away by hand pushes the debris onto the floor or into the user's lap, and a hand vacuum is loud and must be fetched first. We will build **M.A.T.S** (Mechanized Assistant for Tabletop Sanitation), a small robot that cleans a desk on its own. It drives on tracks and pushes the debris ahead of a brush to the table edge. There it lowers a bucket on two arms over the edge, and the brush pushes the debris into the bucket. When the bucket is full, a person lifts it off, empties it and puts it back.
 
 Two things make M.A.T.S different from existing robots. First, **the table edge is part of the task, not only a hazard.** Robot vacuums use infrared cliff sensors to keep away from ledges such as stairs[^roomba], and desk robots such as Cozmo stop when they detect a cliff[^cozmo-sdk]. M.A.T.S drives to the edge on purpose, because that is where it empties its brush. It must therefore stop close to the edge again and again without ever falling off. Second, **the face shows the work.** Cozmo's face and arm serve play: its arm picks up the cubes that it plays games with[^cozmo]. The face of M.A.T.S tells the user what the robot is doing and what it needs. It strains and sweats while it pushes, it is happy when a load ends up in the bucket, and it is sad when the bucket is full.
 
@@ -72,7 +72,7 @@ The main focus is the design of the physical robot. The goals are listed by impo
 
 The tracks are locked during steps 3 to 5.
 
-**Main parts** (shown in Figure 1, labeled in Figures 2 and 3):
+**Main parts** (shown in Figures 1 and 2, labeled in Figure 3):
 
 - **Body and head.** A 3D-printed PLA body. The display, a 2.8-inch color screen, sits in a fixed head on top of the body.
 - **Tracks.** Two tracks printed in TPU as closed bands with teeth on the inside. They run on printed PLA sprockets with guide ridges. On each side, a DC gearmotor drives the rear sprocket, and the front sprocket runs free in a slotted mount, so that we can adjust the track tension after printing.
@@ -85,7 +85,7 @@ The tracks are locked during steps 3 to 5.
 
 **Speed and power.** The gearmotors turn at about 140 RPM without load[^dg01d]. The top speed is this speed times the sprocket circumference: with a 35 mm sprocket, for example, it would be about 0.26 m/s. The sprocket diameter is set in CAD, and the firmware caps the speed so that the robot stops within the distance between the edge sensors and the tracks.
 
-One 12 V bench supply powers all actuators through one cable:
+One 12 V bench supply powers all actuators and the encoders through one cable:
 - The linear actuator runs directly on 12 V.
 - One adjustable step-down converter feeds the track motors. The motor driver chips drop part of the voltage[^l293d], so we set the converter so that the motors get about their suggested 4.5 V at full speed[^dg01d].
 - A second converter feeds the servos at 5 V.
@@ -163,9 +163,9 @@ We work in short iterations of about one week. Each iteration follows the same l
 
 | Iteration | Week (dates) | Main tasks (responsible) | Milestone: done when |
 |---|---|---|---|
-| I0 | W41–W42 (5–18 Oct) | First proposal, Deliverable 4A (11 Oct) and the 4B project review (both) | **M0:** Done. The concept was changed after the feedback |
+| I0 | W41–W42 (5–18 Oct) | First proposal and Deliverable 4A, due 11 Oct (both) | **M0:** Done. The concept was changed after the feedback |
 | I1 | W43 (19–25 Oct) | Revised concept, sketches and deliverable (both); collect the lab parts and send the order list for the edge sensors and brush to the faculty (Yuki); CAD v0: layout of the main parts and the arm geometry, using measured part sizes (Martin) | **M1:** The revised deliverable is handed in, the lab parts are in hand, and the order list is sent |
-| I2 | W44 (26 Oct–1 Nov) | CAD v1 of the body, track drive, brush arm and bucket arms (Martin); test prints: a TPU track section with sprockets, the encoder couplings, the arm hubs on the servos, the brush rail with the linear actuator, and the bucket mount with bearings and ballast (Martin); a bench torque test of the bucket servo with a test arm and the bucket with ballast and a full load (Martin); bring up the motors with encoders and driver chips, the servos, the linear actuator, the display and the IMU data stream on the bench (Yuki); design the faces on the laptop (Martin) | **M2:** CAD v1 is done, and each test print and part works on the bench |
+| I2 | W44 (26 Oct–1 Nov) | 4B project review, 26 Oct (both); CAD v1 of the body, track drive, brush arm and bucket arms (Martin); test prints: a TPU track section with sprockets, the encoder couplings, the arm hubs on the servos, the brush rail with the linear actuator, and the bucket mount with bearings and ballast (Martin); a bench torque test of the bucket servo with a test arm and the bucket with ballast and a full load (Martin); bring up the motors with encoders and driver chips, the servos, the linear actuator, the display and the IMU data stream on the bench (Yuki); design the faces on the laptop (Martin) | **M2:** CAD v1 is done, and each test print and part works on the bench |
 | I3 | W45 (2–8 Nov) | Print and assemble robot v1 (Martin); track control with the encoders, speed cap, watchdog, motor stop on a lost USB cable, edge reflex and the reversing rule (Yuki); Project part 1, due 8 Nov (both) | **M3:** The robot passes the mobility test and stops at the edge on a table, and Project part 1 is handed in |
 | I4 | W46 (9–15 Nov) | Arm control, the linear actuator, squaring up to the edge, and the dump cycle with its interlock (Yuki); reach, tipping and servo-torque tests, and CAD v2 from the results (Martin); faces on the display (Martin); Project part 2, due 15 Nov (both) | **M4 (MVP):** On a real table, the robot runs a full dump cycle at the press of a button and never falls off, and Project part 2 is handed in |
 | I5 | W47 (16–22 Nov) | Print and assemble v2 (Martin); autonomous cleaning (Yuki); collection-rate experiments and tuning (Yuki); animate the seven states and connect them to events (Martin) | **M5:** Feature freeze: the robot cleans a table on its own, and the experiment data is logged |
