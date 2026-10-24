@@ -39,7 +39,7 @@ The main focus is the design of the physical robot. The goals are listed by impo
 6. **Collection rate, the optimization task (Should).** Increase the share of debris that ends up in the bucket (Section 3). Pass: we report the rate before and after tuning, and the tuned rate is at least 80 % by mass.
 7. **Autonomous cleaning (Should).** The robot cleans a table on its own: it repeats the dump cycle along different edges until it is stopped. Pass: 5 minutes of cleaning on each of three tables, with no fall.
 8. **Reactions (Should).** The face changes with the events in Table 1. Pass: each event, triggered by hand, shows the right face within 1 s.
-9. **Could.** A camera that finds dirty spots, and sounds.
+9. **Could.** A camera that finds dirty spots.
 
 ### Inspiration
 
@@ -126,7 +126,6 @@ The low level checks the edge sensors in every loop iteration before it applies 
 
 ## 4. Bill of materials (BOM)
 
-We use the lab's equipment wherever we can. Only three items must be bought, all from RS, as the assignment asks. The last two rows are an optional part and a fallback, which we buy only if needed.
 
 | # | Component | Part | Function | Qty | Source |
 |---|---|---|---|---|---|
@@ -143,15 +142,13 @@ We use the lab's equipment wherever we can. Only three items must be bought, all
 | 11 | Power supply | Bench power supply set to 12 V, with cable | Power for all actuators | 1 | Lab |
 | 12 | Step-down converters | Adjustable step-down (buck) converter, model to be confirmed | Motor rail and 5 V servo rail | 2 | Lab |
 | 13 | Cut-off switch | Switch in the 12 V cable, mounted on the robot | Cut the power to all actuators | 1 | Lab |
-| 14 | Edge sensors | [ST SATEL-VL53L4CD](https://no.rs-online.com/web/p/sensor-development-tools/2410906) (RS 241-0906), VL53L4CD time-of-flight sensor, two boards per kit | Safety reflex and edge approach, one sensor ahead of each track | 2 kits (2 sensors used, 2 spare) | Buy: RS |
+| 14 | Edge sensors | [ST SATEL-VL53L4CD](https://no.rs-online.com/web/p/sensor-development-tools/2410906) (RS 241-0906), VL53L4CD time-of-flight sensor, two boards per kit | Safety reflex and edge approach, one sensor ahead of each track | 1 kit (2 sensors) | Buy: RS |
 | 15 | Brush | [RS PRO nylon brush strip](https://no.rs-online.com/web/p/door-seals/3269814) (RS 326-9814), cut to width | The brush | 1 | Buy: RS |
-| 16 | Bearings | [RS PRO 623-2Z ball bearing](https://no.rs-online.com/web/p/ball-bearings/2612628), 3 × 10 × 4 mm (RS 261-2628) | Bucket pivots | 2 | Buy: RS |
+| 16 | Bearings | Ball bearings | Bucket pivots | 2 | Lab |
 | 17 | Ballast | Lead or steel weights | Keep the bucket upright | – | Lab |
 | 18 | Filament | PLA and TPU | Printed parts; TPU for the tracks and the encoder couplings | – | Lab |
 | 19 | Small parts | Solderable board, IC sockets, pull-up and pull-down resistors, wires, connectors, M2/M3 screws | Assembly | – | Lab |
 | 20 | Camera (Could) | Raspberry Pi 5 and Raspberry Pi camera | Find dirty spots | 1 | Lab |
-| 21 | Pin expander (optional) | [Microchip MCP23017-E/SP](https://www.digikey.com/en/products/detail/microchip-technology/MCP23017-E-SP/894272), 16 pins over I2C, through-hole | More pins, if the microcontroller runs short | 1 | Buy if needed: DigiKey or RS (RS 040-3806) |
-| 22 | Tracks (fallback) | [Pololu 30T track set](https://www.pololu.com/product/3033) (#3033) | Replace the printed tracks if they fail | 1 set | Buy if needed: [DigiKey](https://www.digikey.no/no/supplier-centers/pololu) |
 
 When the model of the lab's step-down converters is known, we check it and the motor drivers against the stall currents of the motors and servos. The bearing size will be confirmed in CAD.
 
@@ -162,7 +159,7 @@ We work in short iterations of about one week. Each iteration follows the same l
 | Iteration | Week (dates) | Main tasks (responsible) | Milestone: done when |
 |---|---|---|---|
 | I0 | W41–W42 (5–18 Oct) | First proposal, Deliverable 4A (11 Oct) and the 4B project review (both) | **M0:** Done. The concept was changed after the feedback |
-| I1 | W43 (19–25 Oct) | Revised concept, sketches and deliverable (both); collect the lab parts and send the order list for the edge sensors, brush and bearings to the faculty (Yuki); CAD v0: layout of the main parts and the arm geometry, using measured part sizes (Martin) | **M1:** The revised deliverable is handed in, the lab parts are in hand, and the order list is sent |
+| I1 | W43 (19–25 Oct) | Revised concept, sketches and deliverable (both); collect the lab parts and send the order list for the edge sensors and brush to the faculty (Yuki); CAD v0: layout of the main parts and the arm geometry, using measured part sizes (Martin) | **M1:** The revised deliverable is handed in, the lab parts are in hand, and the order list is sent |
 | I2 | W44 (26 Oct–1 Nov) | CAD v1 of the body, track drive, brush arm and bucket arms (Martin); test prints: a TPU track section with sprockets, the encoder couplings, the arm hubs on the servos, the brush rail with the linear actuator, and the bucket mount with bearings and ballast (Martin); bring up the motors with encoders and driver chips, the servos, the linear actuator, the display and the IMU data stream on the bench (Yuki); design the faces on the laptop (Martin) | **M2:** CAD v1 is done, and each test print and part works on the bench |
 | I3 | W45 (2–8 Nov) | Print and assemble robot v1 (Martin); track control with the encoders, speed cap, watchdog, motor stop on a lost USB cable, edge reflex and the reversing rule (Yuki); Project part 1, due 8 Nov (both) | **M3:** The robot passes the mobility test and stops at the edge on a table, and Project part 1 is handed in |
 | I4 | W46 (9–15 Nov) | Arm control, the linear actuator, squaring up to the edge, and the dump cycle with its interlock (Yuki); reach, tipping and servo-torque tests, and CAD v2 from the results (Martin); faces on the display (Martin); Project part 2, due 15 Nov (both) | **M4 (MVP):** On a real table, the robot runs a full dump cycle at the press of a button and never falls off, and Project part 2 is handed in |
