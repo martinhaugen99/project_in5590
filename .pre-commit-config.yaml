@@ -4,8 +4,11 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
+      # Skip cad/: these hooks would rewrite exported STEP files
       - id: trailing-whitespace
+        exclude: ^cad/
       - id: end-of-file-fixer
+        exclude: ^cad/
       - id: check-yaml
       - id: check-toml
       - id: check-merge-conflict

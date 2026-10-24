@@ -15,5 +15,8 @@ build/
 outputs/
 multirun/
 
+# Lock files that SolidWorks (and Office) create next to an open file
+~$*
+
 # macOS
 .DS_Store
