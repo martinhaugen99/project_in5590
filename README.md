@@ -6,6 +6,7 @@ M.A.T.S (Mechanized Assistant for Tabletop Sanitation) is a small animatronic ro
 
 ```
 project_in5590/
+├── cad/                # SolidWorks source (structure and lock workflow: cad/README.md)
 ├── configs/            # Hydra configs for experiments
 ├── docs/               # Deliverables, decisions, experiment reports
 ├── src/mats/           # Host-side Python package (experiments, analysis, tools)
@@ -18,7 +19,7 @@ project_in5590/
 └── CLAUDE.md           # Project rules for coding agents
 ```
 
-More folders (`cad/`, `print/`, `electronics/`, `firmware/`, `data/`) are added when they are needed.
+More folders (`print/`, `electronics/`, `firmware/`, `data/`) are added when they are needed.
 
 ## Setup
 
@@ -26,6 +27,7 @@ More folders (`cad/`, `print/`, `electronics/`, `firmware/`, `data/`) are added 
 2. From the repository root:
 
    ```bash
+   git lfs install --local     # Git LFS hooks for the SolidWorks files (cad/README.md)
    uv sync                     # creates .venv/ with the exact versions in uv.lock
    uv run pre-commit install   # runs the checks below on every git commit
    ```

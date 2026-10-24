@@ -14,6 +14,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted |
 | D009 | 2026-10-22 | Display and the seven states | Accepted |
 | D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Accepted |
+| D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -377,6 +378,43 @@ Option 2: [SparkFun OpenLog Artemis](https://www.sparkfun.com/sparkfun-openlog-a
 ### Consequences
 
 - It takes a serial input pin on the microcontroller, which has few free pins (D004).
+
+## D011: CAD files in Git LFS with file locks
+
+- **Date:** 2026-10-24
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+Martin and Yuki both edit the SolidWorks files. These files are binary, so git cannot merge two versions: if two people edit the same file at the same time, one of them loses their work. Git also stores a full copy of a binary file in every commit, and the pre-commit hook rejects files larger than 3000 KB, which assemblies can exceed.
+
+### Options
+
+1. Plain git, with edits agreed in chat.
+2. Git LFS without locks.
+3. Git LFS with lockable files.
+
+### Choice
+
+Option 3:
+- `.gitattributes` tracks `*.SLDPRT`, `*.SLDASM` and `*.SLDDRW` (upper and lower case) in Git LFS as lockable.
+- STL, 3MF and STEP files stay in plain git.
+- The structure and the lock workflow are in `cad/README.md`.
+
+### Reasons
+
+- Lockable files are read-only until the user locks them with `git lfs lock`. The lock is held on the GitHub LFS server, and Git LFS stops a push that changes a file locked by another user (`git lfs help config`, `lfs.<url>.locksverify`). A lock request to the GitHub repository succeeded on 2026-10-24.
+- Git LFS keeps the full copies out of the git history. The large-file hook skips files tracked by Git LFS (source of `check_added_large_files` in pre-commit-hooks v6.0.0).
+- Git for Windows includes Git LFS (version 3.7.1 on Martin's machine), so nothing is installed globally.
+
+### Consequences
+
+- Each clone runs `git lfs install --local` once (`README.md`, `cad/README.md`).
+- Lock a file before editing it. Commit and push before unlocking it, because `git lfs unlock` refuses a file with uncommitted changes.
+- GitHub limits LFS storage and bandwidth, so commit CAD files at useful points, not after every save.
+- STEP and STL files larger than 3000 KB are still blocked by the hook. Adding them to Git LFS needs a new decision.
+- The trailing-whitespace and end-of-file hooks skip `cad/`, so they do not rewrite exported STEP files.
 
 ## Template
 

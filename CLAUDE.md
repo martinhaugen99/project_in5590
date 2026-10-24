@@ -64,7 +64,7 @@ When a choice changes, record it in a new decision entry and update its row with
 
 ```
 project_in5590/
-├── cad/              # Native CAD source + STEP exports
+├── cad/              # SolidWorks source + STEP exports (structure and lock workflow: cad/README.md)
 ├── print/            # STL/3MF + print settings per part
 ├── electronics/      # Wiring diagram, schematic, pinout.md (single source of truth for pins)
 ├── firmware/         # Low-level controller code
@@ -133,7 +133,7 @@ project_in5590/
 
 ### Core commands (fill in during scaffolding)
 ```bash
-# Set up after clone:     uv sync && uv run pre-commit install
+# Set up after clone:     git lfs install --local && uv sync && uv run pre-commit install
 # Format:                 uv run ruff format .
 # Lint + sort imports:    uv run ruff check --fix .
 # Type check:             uv run mypy
@@ -215,9 +215,9 @@ Early development: no backward-compatibility shims, no deprecated code kept arou
 
 - Imperative commit subjects of 50 characters or less. Keep `main` runnable and use short-lived feature branches.
 - Add tests alongside changes in behavior.
-- Native CAD files and large STLs: [FILL IN: Git LFS yes/no. If several people edit SolidWorks files, use LFS with `lockable` and take the lock before editing.]
+- SolidWorks files (`.SLDPRT`, `.SLDASM`, `.SLDDRW`) are in Git LFS as lockable files (D011). Lock a file before editing it, and push before unlocking it (`cad/README.md`). STL, 3MF and STEP files stay in plain git.
 - Pre-commit hooks (`.pre-commit-config.yaml`):
-  - From `pre-commit-hooks`: trailing whitespace, end of file, YAML/TOML syntax, merge conflicts, private keys, and files larger than 3000 KB.
+  - From `pre-commit-hooks`: trailing whitespace, end of file, YAML/TOML syntax, merge conflicts, private keys, and files larger than 3000 KB. The trailing-whitespace and end-of-file hooks skip `cad/`, and the size check skips files in Git LFS.
   - Local hooks: `uv lock --check`, ruff check, ruff format and mypy. These run through `uv run` with the versions in `uv.lock`.
   - Do not bypass the hooks with `--no-verify`. Firmware formatters and linters are added once the toolchain is chosen.
 
