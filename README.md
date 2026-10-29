@@ -1,6 +1,6 @@
 # M.A.T.S
 
-M.A.T.S (Mechanized Assistant for Tabletop Sanitation) is a small animatronic robot on tracks that cleans a desk, built for IN5590 (Rapid Prototyping of Robotic Systems) at UiO. It pushes debris with a brush to the table edge, lowers a bucket over the edge and pushes the debris into it. A face on a display shows what it is doing and what it needs, and it must never drive off the table. This repository holds the CAD, electronics, firmware, host-side tools and documentation.
+M.A.T.S (Mechanized Assistant for Tabletop Sanitation) is a small animatronic robot on tracks that cleans a desk, built for IN5590 (Rapid Prototyping of Robotic Systems) at UiO. It pushes debris with a brush to the table edge, lowers a bucket over the edge and pushes the debris into it. A face on a display shows what it is doing and what it needs, and it must never drive off the table. This repository holds the CAD, electronics, firmware, host-side tools and documentation. **A test to check git on lab pc**.
 
 ## Repository layout
 
