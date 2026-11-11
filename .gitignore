@@ -20,3 +20,6 @@ multirun/
 
 # macOS
 .DS_Store
+
+# print files
+*.STL
