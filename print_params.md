@@ -2,18 +2,20 @@
 
 Layer height 0.2mm for all
 
+**Make bigger holes**
+
 ## Body:
 
-- body chassis:
-- body lid:
-- coupling drive motor encoder(x2):
-- encoder mount(x2):
-- motor mount(x2):
+- body chassis: 40% infill
+- body lid: 15% infill
+- coupling drive motor encoder(x2): 100% infill - **redesign**
+- encoder mount(x2): 60% infill
+- motor mount(x2): 60% infill
 
 ## Head:
 
 - head box back: 40% infill
-- head lid face: 40% infill
+- head lid face: 40% infill - fits
 
 ## Track Drive:
 
@@ -24,12 +26,13 @@ Layer height 0.2mm for all
 
 ## Bucket Arms:
 
-- bucket:
-- bucket arm right:
-- bucket arm left(mirrored):
-- servo mount:
-- spur gear iso:
-- spur gear iso rod:
+- bucket: 40% infill
+- bucket arm right: 40% infill
+- bucket arm left(mirrored): 40% infill
+- servo mount: 60% infill
+- bucket arms servo gear: 100% infill
+- rod: 100% infill
+- bucket arms gear rod reduced: 100% infill
 
 ## Brush Arm:
 
