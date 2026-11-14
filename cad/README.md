@@ -88,3 +88,43 @@ git lfs locks                                             # who has locked what
 - **One SolidWorks version:** a file saved in a newer version does not open for editing in an older one. Both team members use the same version, also on the lab computers.
 - **Backups outside the repository:** in Tools > Options > Backup/Recover, set the backup folder and the auto-recover folder to a local folder outside the repository, and turn off saving backups in the same location as the original.
 - **STEP exports:** export the top assembly to `step/` at each CAD milestone (v0, v1, v2), not after every change. STEP files are not in Git LFS, so the 3000 KB limit of the pre-commit hook applies to them.
+
+
+## Status on parts
+
+### Body
+
+- **Chassis**: in print
+- **Lid**: printed, wait for chassis
+- **Coupling drivemotor to encoder**: make bigger, both outer diameter and holes
+- **Encoder mount**: make bigger, more space for encoder
+- **Motor mount**: make 6.5mm shorter, move side support to the middle and only one
+
+### Head
+
+- **Back**: good, use heated insert
+- **Face**: good
+
+### Track drive
+
+- **Track**: maybe make bigger, check after round is printed
+- **Idler screw**: make slightly smaller
+- **Drive sprocket**: make mount for motor slightly bigger, but outer diam and hole
+- **Idler sprocket**: make hole bigger
+
+### Bucket arms
+
+- **Bucket**: good
+- **Bucket arm**: check after rod is printed, or postprocess holes
+- **Spur gear with rod**: in print
+- **Spur gear for servo**: fits servo
+- **Rod**: in print
+- **Servo mount**: good
+
+### Brush arm
+
+- **Coupling brush to linear actuator**: good
+- **Coupling servo to linear actuator**: good
+- **Edge sensor mount**: make holes for sensors slightly bigger
+- **Guide rail**: good
+- **Servo mount**: good
