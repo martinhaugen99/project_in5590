@@ -94,7 +94,7 @@ git lfs locks                                             # who has locked what
 
 ### Body
 
-- **Chassis**: in print
+- **Chassis**: move mount for breadbord since encoder mount needs to be larger
 - **Lid**: printed, wait for chassis
 - **Coupling drivemotor to encoder**: make bigger, both outer diameter and holes
 - **Encoder mount**: make bigger, more space for encoder
