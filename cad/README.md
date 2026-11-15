@@ -95,7 +95,7 @@ git lfs locks                                             # who has locked what
 ### Body
 
 - **Chassis**: move mount for breadbord since encoder mount needs to be larger
-- **Lid**: printed, wait for chassis
+- **Lid**: fits
 - **Coupling drivemotor to encoder**: make bigger, both outer diameter and holes
 - **Encoder mount**: make bigger, more space for encoder
 - **Motor mount**: make 6.5mm shorter, move side support to the middle and only one
