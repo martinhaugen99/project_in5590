@@ -94,11 +94,11 @@ git lfs locks                                             # who has locked what
 
 ### Body
 
-- **Chassis**: move mount for breadbord since encoder mount needs to be larger
+- **Chassis**: move mount for breadbord, raised part for motors
 - **Lid**: fits
 - **Coupling drivemotor to encoder**: make bigger, both outer diameter and holes
-- **Encoder mount**: make bigger, more space for encoder
-- **Motor mount**: make 6.5mm shorter, move side support to the middle and only one
+- **Encoder mount**: fits
+- **Motor mount**: fits
 
 ### Head
 
@@ -108,17 +108,19 @@ git lfs locks                                             # who has locked what
 ### Track drive
 
 - **Track**: maybe make bigger, check after round is printed
-- **Idler screw**: make slightly smaller
-- **Drive sprocket**: make mount for motor slightly bigger, but outer diam and hole
-- **Idler sprocket**: make hole bigger
+- **Idler screw**: use M4 screw instead, need nylock nut
+- **Drive sprocket**: good
+- **Idler sprocket**: if screw used, fits
 
 ### Bucket arms
 
+Need a mount in the body to prevent gears jumping out.
+
 - **Bucket**: good
-- **Bucket arm**: check after rod is printed, or postprocess holes
-- **Spur gear with rod**: in print
-- **Spur gear for servo**: fits servo
-- **Rod**: in print
+- **Bucket arm**: postprocess holes
+- **Spur gear with rod**: good
+- **Spur gear for servo**: good
+- **Rod**: good
 - **Servo mount**: good
 
 ### Brush arm
