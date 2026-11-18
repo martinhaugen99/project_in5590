@@ -1,6 +1,8 @@
 # Print parameters:
 
-Layer height 0.2mm for all
+Layer height 0.2mm for all except tracks
+
+PLA for all except tracks
 
 **Make bigger holes**
 
@@ -22,7 +24,7 @@ Layer height 0.2mm for all
 - track idler screw(x2): 100% infill
 - track sprocket drive(x2): 60% infill
 - track sprocket idler(x2): 60% infill
-- track(x2, tpu):
+- track(x2, tpu): 15% infill, 0.18 mm layer height
 
 ## Bucket Arms:
 
@@ -33,6 +35,7 @@ Layer height 0.2mm for all
 - bucket arms servo gear: 100% infill
 - rod: 100% infill
 - bucket arms gear rod reduced: 100% infill
+- rod mount: 60% infill
 
 ## Brush Arm:
 

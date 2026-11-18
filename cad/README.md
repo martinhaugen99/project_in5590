@@ -78,6 +78,13 @@ git lfs locks                                             # who has locked what
 - Do not edit the same file on two branches.
 - Close the files in SolidWorks before `git pull`, `git checkout` or `git switch`.
 
+### Commands to lock and unlock
+
+```
+git lfs lock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_arm/*.SLDASM bucket_arms/*.SLDPRT bucket_arms/*.SLDASM head/*.SLDPRT head/*.SLDASM purchased/*.SLDPRT track_drive/*.SLDPRT track_drive/*.SLDASM
+git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_arm/*.SLDASM bucket_arms/*.SLDPRT bucket_arms/*.SLDASM head/*.SLDPRT head/*.SLDASM purchased/*.SLDPRT track_drive/*.SLDPRT track_drive/*.SLDASM
+```
+
 ## Rules
 
 - **Names:** lowercase with underscores, starting with the module name (`track_sprocket_drive.SLDPRT`). Do not put versions or dates in file names; git keeps the history.
@@ -94,11 +101,11 @@ git lfs locks                                             # who has locked what
 
 ### Body
 
-- **Chassis**: move mount for breadbord, raised part for motors
-- **Lid**: fits
-- **Coupling drivemotor to encoder**: make bigger, both outer diameter and holes
-- **Encoder mount**: fits
-- **Motor mount**: fits
+- **Chassis**: changes fixed, need to print
+- **Lid**: good
+- **Coupling drivemotor to encoder**: make bigger, both outer diameter and holes (postprocess)
+- **Encoder mount**: good
+- **Motor mount**: good
 
 ### Head
 
@@ -114,19 +121,18 @@ git lfs locks                                             # who has locked what
 
 ### Bucket arms
 
-Need a mount in the body to prevent gears jumping out.
-
 - **Bucket**: good
-- **Bucket arm**: postprocess holes
+- **Bucket arm**: postprocess holes so the arms sit normal on the rod
 - **Spur gear with rod**: good
 - **Spur gear for servo**: good
 - **Rod**: good
+- **Rod mount**: good
 - **Servo mount**: good
 
 ### Brush arm
 
 - **Coupling brush to linear actuator**: good
 - **Coupling servo to linear actuator**: good
-- **Edge sensor mount**: make holes for sensors slightly bigger
+- **Edge sensor mount**: good
 - **Guide rail**: good
 - **Servo mount**: good
