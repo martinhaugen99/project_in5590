@@ -50,7 +50,7 @@ When a choice changes, record it in a new decision entry and update its row with
 
 - **No Docker.** Every part of the project uses a project-local, pinned environment, and nothing is installed globally on the host (see "Environment setup").
 - CAD: SolidWorks, AutoDesk
-- Firmware toolchain and language: TBD (the MCU is the Arduino Nano ESP32, D004)
+- Firmware: C++17 on the Arduino-ESP32 core 3.3.12, built with PlatformIO (platform `espressif32@8.0.0`) run through uv, source in `firmware/` (D013). GPIO pin numbering, pins in `firmware/include/pins.h` from `docs/schematics.pdf`.
 - High-level language and framework: the high level runs on the microcontroller next to the low level (D004), with no separate high-level computer or framework.
 - Host-side Python (experiments, analysis, tools): package `mats` in `src/mats/`, Python 3.13.
   - Environment and dependencies: uv. `pyproject.toml` holds version ranges, `uv.lock` pins exact versions and is committed.
@@ -127,8 +127,8 @@ project_in5590/
 ### Environment setup
 - No Docker. Dependencies are pinned in lock files and installed only through the project's environment definitions, never ad hoc.
 - Dev machine(s): [FILL IN: which machine is primary, its OS, and which one flashes the robot]
-- Python: uv, with Python 3.13 pinned in `.python-version`. `uv sync` creates `.venv/` from `uv.lock`. Add packages only with `uv add <pkg>` or `uv add --dev <pkg>`, and commit `pyproject.toml` and `uv.lock` together. Never use `pip install` or a global Python. uv itself is the only tool installed outside the project. It keeps a shared download cache in `~/.cache/uv`, and pre-commit keeps its hook environments in `~/.cache/pre-commit`.
-- Firmware: [FILL IN after the MCU decision: toolchain, e.g. PlatformIO, which keeps toolchains per project]
+- Python: uv, with Python 3.13 pinned in `.python-version`. `uv sync` creates `.venv/` from `uv.lock`. Add packages only with `uv add <pkg>` or `uv add --dev <pkg>`, and commit `pyproject.toml` and `uv.lock` together. Never use `pip install` or a global Python. uv itself is the only tool installed outside the project. It keeps a shared download cache in `~/.cache/uv`, pre-commit keeps its hook environments in `~/.cache/pre-commit`, and PlatformIO keeps its toolchains in `~/.platformio`.
+- Firmware: PlatformIO Core and clang-format are dev dependencies in `uv.lock`, run as `uv run pio` and `uv run clang-format`. `firmware/platformio.ini` pins the platform and every library to exact versions (D013).
 - On-robot computer: none (D004). If the Could camera is added: [FILL IN: OS image, how code is deployed to the Raspberry Pi 5]
 
 ### Core commands (fill in during scaffolding)
@@ -140,9 +140,10 @@ project_in5590/
 # Host-side tests:        uv run pytest -q
 # All git hooks:          uv run pre-commit run --all-files
 # Run an experiment:      uv run mats-experiment name=<name> [key=value ...]
-# Build firmware:         [FILL IN]
-# Flash firmware:         [FILL IN]   # hardware action: needs confirmation
-# Serial monitor / logs:  [FILL IN]
+# Build firmware:         uv run pio run -d firmware
+# Format firmware:        uv run clang-format -i firmware/src/*.cpp firmware/src/*.h firmware/include/*.h
+# Flash firmware:         uv run pio run -d firmware -t upload   # hardware action: needs confirmation
+# Serial monitor / logs:  uv run pio device monitor -d firmware
 # Run high-level code:    part of the firmware (D004)
 ```
 Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv run isort .` step does not apply in this project.
@@ -178,7 +179,7 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 
 ### Code style
 - Python: type hints, Google-style docstrings, 4-space indents, 88-character lines, f-strings, pathlib over os, ALL_CAPS constants, `_private` methods. Ruff formats, lints and sorts imports (rules: defaults + `I`, `B`, `UP`, `SIM`, `D` with the Google convention). mypy runs in strict mode. Settings live in `pyproject.toml`; change them there, not with inline flags.
-- C/C++ (if used): [FILL IN: language standard, formatter/style, naming convention]
+- C/C++ (D013): C++17 for `firmware/src/` (set in `build_src_flags`), 4-space indents, 100-character lines, PascalCase types, snake_case functions and variables, ALL_CAPS constants, a trailing underscore for private and file-local state. clang-format formats (`.clang-format`, Google base). Our sources build with `-Wall -Wextra -Werror`. Settings live in `.clang-format` and `firmware/platformio.ini`.
 
 ### Mechanical & 3D printing
 - Parametric CAD: drive the key dimensions (motor mounts, track width, display cutout, sensor positions, wall thickness, clearances) from named parameters.
@@ -219,8 +220,8 @@ Early development: no backward-compatibility shims, no deprecated code kept arou
 - SolidWorks files (`.SLDPRT`, `.SLDASM`, `.SLDDRW`) are in Git LFS as lockable files (D011). Lock a file before editing it, and push before unlocking it (`cad/README.md`). STL, 3MF and STEP files stay in plain git.
 - Pre-commit hooks (`.pre-commit-config.yaml`):
   - From `pre-commit-hooks`: trailing whitespace, end of file, YAML/TOML syntax, merge conflicts, private keys, and files larger than 3000 KB. The trailing-whitespace and end-of-file hooks skip `cad/`, and the size check skips files in Git LFS.
-  - Local hooks: `uv lock --check`, ruff check, ruff format and mypy. These run through `uv run` with the versions in `uv.lock`.
-  - Do not bypass the hooks with `--no-verify`. Firmware formatters and linters are added once the toolchain is chosen.
+  - Local hooks: `uv lock --check`, ruff check, ruff format, mypy, and clang-format for `firmware/`. These run through `uv run` with the versions in `uv.lock`.
+  - Do not bypass the hooks with `--no-verify`.
 
 ## Safety
 

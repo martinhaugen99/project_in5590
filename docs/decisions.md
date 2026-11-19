@@ -16,6 +16,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Accepted |
 | D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
 | D012 | 2026-10-24 | CAD: module owners and a table of shared dimensions | Accepted |
+| D013 | 2026-11-19 | Firmware toolchain: PlatformIO through uv, Arduino-ESP32 core 3.3.12 | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -455,6 +456,56 @@ Option 3:
 
 - A shared value changes in steps: its owner updates the table, commits and pushes it, and tells the other person, and each owner updates their own parts. Until then, the table and the parts can disagree. Interference Detection in the top assembly catches parts that no longer fit.
 - The lock workflow of D011 still applies, mainly to `mats.SLDASM` and `layout.SLDPRT`.
+
+## D013: Firmware toolchain
+
+- **Date:** 2026-11-19
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+The firmware for the Arduino Nano ESP32 (D004) had no toolchain yet. Project 2 is due on 22 November and asks for the robot software with setup and run instructions (`docs/ASSIGNMENT_2.md`). Both team members need the same toolchain and library versions, and `CLAUDE.md` rules out global installs and unpinned dependencies. The pin map is in `docs/schematics.pdf`, with Arduino pin labels.
+
+### Options
+
+1. **Toolchain:** PlatformIO run through uv, Arduino IDE 2, or Arduino CLI.
+2. **Location:** `firmware/` at the root (the layout in `CLAUDE.md`), or `src/firmware/` (the assignment asks for the software in `./src`).
+3. **Pin numbering:** the PlatformIO board `arduino_nano_esp32` sets `-DBOARD_HAS_PIN_REMAP`, so the core maps Arduino pin numbers to GPIO numbers. The other option is GPIO numbers everywhere, with `-DBOARD_USES_HW_GPIO_NUMBERS`.
+4. **Toolchain storage:** the PlatformIO default `~/.platformio`, or a folder inside the repository.
+
+### Choice
+
+- **Toolchain:**
+  - PlatformIO Core 6.2.0 is a uv dev dependency (pinned in `uv.lock`), run as `uv run pio`.
+  - The platform is `platformio/espressif32@8.0.0`, the latest release (19 Oct 2026), which ships Arduino-ESP32 core 3.3.12.
+  - `firmware/platformio.ini` pins every library to an exact version.
+- **Location:** `firmware/` at the root. `README.md` explains this for the assignment's `./src` rule.
+- **Pin numbering:** GPIO numbers (`-DBOARD_USES_HW_GPIO_NUMBERS`). `firmware/include/pins.h` uses the `D*`/`A*` names from the schematic and checks each GPIO number with `static_assert` against the [official pinout](https://docs.arduino.cc/resources/pinouts/ABX00083-full-pinout.pdf).
+- **C/C++ style:**
+  - C++17 for our sources.
+  - Formatted by clang-format (`.clang-format`: Google base, 4-space indent, 100 columns).
+  - Naming: PascalCase types, snake_case functions and variables, ALL_CAPS constants.
+  - clang-format 23.1.5 is pinned in `uv.lock` and runs as a local pre-commit hook.
+  - Our sources build with `-Wall -Wextra -Werror`.
+- **Storage:** toolchains in `~/.platformio`, treated like the uv cache.
+
+### Reasons
+
+- uv already pins the Python tools, so PlatformIO through uv keeps one install method. `platformio.ini` pins the platform and the libraries, so both clones build the same firmware.
+- With the pin remap, the core remaps pin numbers only in its own low-level functions. The `SPI.begin`, `Wire.begin` and `HardwareSerial::begin` class methods are not listed in `io_pin_remap.h`, and libraries that call ESP-IDF directly are not remapped at all. With GPIO numbers, every layer sees the same number.
+- The ESP32 toolchains take about 1 GB. Inside the repository folder, their deep paths risk Windows path-length errors.
+- The framework compiles with `-std=gnu++2b`, and `build_unflags` does not remove it. So `-std=gnu++17` is set in `build_src_flags`, where it comes last on the command line for the files in `firmware/src/`.
+
+### Consequences
+
+- The commands are in `README.md` and `CLAUDE.md`. The first build downloads the toolchain, so it needs a network connection.
+- Each build prints one framework warning from `io_pin_remap.cpp`: "The Arduino API will use GPIO numbers for this build." It confirms the chosen numbering mode.
+- The schematic puts parts on pins with a second use, and the firmware works around each one:
+  - D0 and D1 are UART0 RX/TX. The firmware sets `MOTOR_ENABLE` (D0) low first in `setup()`, and core logging is off.
+  - D12 is the default SPI MISO pin and the IMU input. The display SPI starts without MISO.
+  - D8 is the default UART1 TX pin and a track input. Serial1 starts with no TX pin.
+- Step 1 of the firmware is a bench console with no edge reflex. The safety layer and the dump cycle follow in step 2, and the state machine with laptop unit tests (`pio test`) in step 3.
 
 ## Template
 
