@@ -1,0 +1,12 @@
+# C++ style for firmware/ (D013): C++17, 4-space indent, 100 columns.
+# Naming (not enforced by clang-format): PascalCase types, snake_case functions and
+# variables, ALL_CAPS constants, trailing underscore for private members.
+BasedOnStyle: Google
+Language: Cpp
+Standard: c++17
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false

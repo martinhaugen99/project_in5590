@@ -11,6 +11,9 @@ dist/
 build/
 *.egg-info/
 
+# PlatformIO build folder (toolchains live in ~/.platformio, D013)
+firmware/.pio/
+
 # Hydra run folders (configs, logs and results of each run)
 outputs/
 multirun/
