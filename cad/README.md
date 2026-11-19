@@ -31,11 +31,11 @@ Each module has one owner, who creates and edits all parts and the subassembly i
 | Files | Owner |
 |---|---|
 | `mats.SLDASM`, `layout.SLDPRT`, `step/` | Martin |
-| `body/` | not decided |
-| `track_drive/` | not decided |
-| `brush_arm/` | not decided |
-| `bucket_arms/` | not decided |
-| `head/` | not decided |
+| `body/` | Martin |
+| `track_drive/` | Martin |
+| `brush_arm/` | Martin |
+| `bucket_arms/` | Martin |
+| `head/` | Martin |
 | `purchased/` | anyone; models rarely change after they are added |
 
 Adding or changing parts inside a subassembly does not change `mats.SLDASM`. The top assembly changes only when a subassembly is added or the mates between modules change, and Martin makes those changes.
@@ -101,9 +101,9 @@ git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_
 
 ### Body
 
-- **Chassis**: changes fixed, need to print
+- **Chassis**: good
 - **Lid**: good
-- **Coupling drivemotor to encoder**: make bigger, both outer diameter and holes (postprocess)
+- **Coupling drivemotor to encoder**: good
 - **Encoder mount**: good
 - **Motor mount**: good
 
@@ -114,15 +114,15 @@ git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_
 
 ### Track drive
 
-- **Track**: maybe make bigger, check after round is printed
-- **Idler screw**: use M4 screw instead, need nylock nut
+- **Track**: good
+- **Idler screw**: will use M4 screw
 - **Drive sprocket**: good
-- **Idler sprocket**: if screw used, fits
+- **Idler sprocket**: good
 
 ### Bucket arms
 
 - **Bucket**: good
-- **Bucket arm**: postprocess holes so the arms sit normal on the rod
+- **Bucket arm**: good
 - **Spur gear with rod**: good
 - **Spur gear for servo**: good
 - **Rod**: good
