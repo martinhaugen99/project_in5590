@@ -41,3 +41,9 @@ repos:
         language: unsupported
         types_or: [python, pyi]
         pass_filenames: false
+      - id: clang-format
+        name: clang-format
+        entry: uv run clang-format -i
+        language: unsupported
+        types_or: [c, c++]
+        files: ^firmware/
