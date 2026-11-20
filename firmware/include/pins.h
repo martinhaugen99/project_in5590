@@ -1,4 +1,4 @@
-// Pin map of M.A.T.S, from docs/schematics.pdf (sheet 01: sensors, display and servos;
+// Pin map of M.A.T.S, from electronics/schematics.pdf (sheet 01: sensors, display and servos;
 // sheet 02: motor drivers). The schematic uses Arduino pin labels (D0..D13, A0..A7).
 //
 // platformio.ini defines BOARD_USES_HW_GPIO_NUMBERS, so the D*/A* constants of the core hold

@@ -8,7 +8,8 @@ M.A.T.S (Mechanized Assistant for Tabletop Sanitation) is a small animatronic ro
 project_in5590/
 ├── cad/                # SolidWorks source (structure and lock workflow: cad/README.md)
 ├── configs/            # Hydra configs for experiments
-├── docs/               # Deliverables, decisions, experiment reports, schematics.pdf
+├── docs/               # Deliverables, decisions, experiment reports
+├── electronics/        # Wiring schematic and datasheets
 ├── firmware/           # Robot firmware for the Arduino Nano ESP32 (PlatformIO, C++)
 ├── src/mats/           # Host-side Python package (experiments, analysis, tools)
 ├── tests/              # Host-side tests (pytest)
@@ -20,7 +21,7 @@ project_in5590/
 └── CLAUDE.md           # Project rules for coding agents
 ```
 
-More folders (`electronics/`, `data/`) are added when they are needed.
+More folders, such as `data/`, are added when they are needed.
 
 The software that runs the robot is the firmware in `firmware/`, written in C++ for the Arduino Nano ESP32. The Python package in `src/mats/` only holds host-side tools for experiments on the laptop.
 
@@ -58,7 +59,7 @@ Both commands update `pyproject.toml` and `uv.lock`. Commit both files together.
 
 ## Firmware
 
-The firmware runs on the Arduino Nano ESP32 and is built with [PlatformIO](https://docs.platformio.org/), which `uv sync` installs into the project environment (D013). The pins come from `docs/schematics.pdf` and are listed in `firmware/include/pins.h`.
+The firmware runs on the Arduino Nano ESP32 and is built with [PlatformIO](https://docs.platformio.org/), which `uv sync` installs into the project environment (D013). The pins come from `electronics/schematics.pdf` and are listed in `firmware/include/pins.h`.
 
 **Step 1 (current): bench bring-up.** A serial console tests each part on its own. There is **no edge reflex yet**, so keep the tracks off the ground. The safety layer and the dump cycle come in step 2.
 
