@@ -33,24 +33,24 @@ buttons ──────────────────► HIGH LEVEL: cl
 | Compute architecture | MCU only: both layers on the two cores of the microcontroller. A laptop on USB powers it and logs data | D004 |
 | Microcontroller | [Arduino Nano ESP32](https://store.arduino.cc/products/nano-esp32): ESP32-S3, 3.3 V logic | D004 |
 | Single-board computer | None for the Must and Should goals | D004 |
-| Display | 2.8" SPI TFT module, ILI9341 controller, 240 × 320 pixels (board V1.2), in a fixed head. Datasheet not yet linked | D009 |
+| Display | 2.8" SPI TFT module ([LCDwiki MSP2807](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), match with the lab board not yet confirmed), [ILI9341](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf) controller, 240 × 320 pixels (board V1.2), in a fixed head | D009 |
 | Dirt detection (Could) | Raspberry Pi 5 with a Raspberry Pi camera | D004 |
 | Edge sensing | 2 × VL53L4CD time-of-flight sensors ([ST SATEL-VL53L4CD](https://no.rs-online.com/web/p/sensor-development-tools/2410906), RS 241-0906) on the brush bracket, one ahead of each track. No rear sensors | D007 |
-| Motors + driver | 2 × [DAGU DG01D 48:1](https://www.sparkfun.com/hobby-gearmotor-140-rpm-pair.html) gearmotors, about 140 RPM without load, suggested 4.5 V; 2 × Yumo E6A2-CW3C encoders, 200 pulses per turn, open collector ([datasheet](https://www.fa.omron.co.jp/data_pdf/cat/e6a2-c_ds_e_8_2_csm490.pdf)); 2 × [TI L293DNE](https://www.ti.com/lit/gpn/l293d), one for the track motors, one for the linear actuator | D006 |
+| Motors + driver | 2 × [DAGU DG01D 48:1](https://www.sparkfun.com/hobby-gearmotor-140-rpm-pair.html) gearmotors, about 140 RPM without load, suggested 4.5 V; 2 × Yumo E6A2-CW3C encoders, 200 pulses per turn, open collector ([datasheet](https://files.omron.eu/downloads/latest/datasheet/en/e6a2-c_incremental_25-mm-dia._rotary_encoder_datasheet_en.pdf)); 2 × [TI L293DNE](https://www.ti.com/lit/gpn/l293d), one for the track motors, one for the linear actuator | D006 |
 | Tracks | Printed TPU bands with teeth on the inside, printed PLA sprockets with guide ridges, front sprocket in a slotted mount for tension | D006 |
 | Arm actuators | 2 × [DFRobot SER0006](https://www.dfrobot.com/product-255.html) micro servos (180°) for the brush arm and the bucket arms, plus a larger lab servo as a spare; [Actuonix PQ12-100-12-P](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf) linear actuator, 20 mm stroke, 12 V, position feedback | D008 |
 | IMU | [SparkFun OpenLog Artemis](https://www.sparkfun.com/sparkfun-openlog-artemis.html) with its built-in ICM-20948, data over serial | D010 |
-| Power | 12 V bench supply for the actuators and the encoders, with a cut-off switch on the robot; two adjustable step-down converters for the track motors and the 5 V servos (model not yet confirmed); laptop USB for the microcontroller, edge sensors and display. No battery | D005 |
+| Power | 12 V bench supply for the actuators and the encoders, with a cut-off switch on the robot; an LM2596 step-down module for the track motors and a [Mateksys BEC12S-PRO](https://www.mateksys.com/?portfolio=bec12s-pro) set to 5.2 V for the servos; laptop USB for the microcontroller, edge sensors and display. No battery | D005, D014 |
 
 When a choice changes, record it in a new decision entry and update its row with the part, its key specs, a datasheet link and the decision ID (D###).
 - Already on hand or provided by the lab: every part in `bom.csv` with status `lab` (confirmed 2026-10-24); printer Isaac (Creality Ender-3 V3 SE); PLA and TPU filament; CNC access
-- Budget: unknown, faculty decides. Parts the lab does not have are requested from the faculty with links to RS, Farnell or Digikey, and the faculty decides whether to buy them (`docs/ASSIGNMENT.md`). Items to order have status `to_order` in `bom.csv`.
+- Budget: unknown, faculty decides. Parts the lab does not have are requested from the faculty with links to RS, Farnell or Digikey, and the faculty decides whether to buy them (`docs/ASSIGNMENT.md`). Items to order have status `to_order` in `bom.csv`, and `received` once they have arrived.
 
 ## Key technologies
 
 - **No Docker.** Every part of the project uses a project-local, pinned environment, and nothing is installed globally on the host (see "Environment setup").
 - CAD: SolidWorks, AutoDesk
-- Firmware: C++17 on the Arduino-ESP32 core 3.3.12, built with PlatformIO (platform `espressif32@8.0.0`) run through uv, source in `firmware/` (D013). GPIO pin numbering, pins in `firmware/include/pins.h` from `docs/schematics.pdf`.
+- Firmware: C++17 on the Arduino-ESP32 core 3.3.12, built with PlatformIO (platform `espressif32@8.0.0`) run through uv, source in `firmware/` (D013). GPIO pin numbering, pins in `firmware/include/pins.h` from `electronics/schematics.pdf`.
 - High-level language and framework: the high level runs on the microcontroller next to the low level (D004), with no separate high-level computer or framework.
 - Host-side Python (experiments, analysis, tools): package `mats` in `src/mats/`, Python 3.13.
   - Environment and dependencies: uv. `pyproject.toml` holds version ranges, `uv.lock` pins exact versions and is committed.
@@ -66,7 +66,7 @@ When a choice changes, record it in a new decision entry and update its row with
 project_in5590/
 ├── cad/              # SolidWorks source + STEP exports (structure and lock workflow: cad/README.md)
 ├── print/            # STL/3MF + print settings per part
-├── electronics/      # Wiring diagram, schematic, pinout.md (single source of truth for pins)
+├── electronics/      # Wiring diagram, schematic, datasheets, pinout.md (single source of truth for pins)
 ├── firmware/         # Low-level controller code
 ├── software/         # Code for the Raspberry Pi 5 (only if the Could camera is added)
 ├── assets/emotions/  # Source graphics/animations for each state

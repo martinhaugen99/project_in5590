@@ -17,6 +17,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
 | D012 | 2026-10-24 | CAD: module owners and a table of shared dimensions | Accepted |
 | D013 | 2026-11-19 | Firmware toolchain: PlatformIO through uv, Arduino-ESP32 core 3.3.12 | Accepted |
+| D014 | 2026-11-20 | Step-down converters: LM2596 for the motors, Mateksys BEC12S-PRO for the servos | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -204,7 +205,7 @@ The first draft proposed a 2S Li-ion pack with protected cells, a fuse and an ex
 Option 2:
 - A 12 V bench supply from the lab powers all actuators and the encoders through one cable. A switch on the robot cuts the power to all motors, servos and the linear actuator.
 - The linear actuator runs directly on 12 V.
-- One adjustable step-down converter feeds the track motors, set so that the motors get about their suggested 4.5 V at full speed. A second converter feeds the servos at 5 V. The converter model is not yet confirmed.
+- One adjustable step-down converter feeds the track motors, set so that the motors get about their suggested 4.5 V at full speed. A second converter feeds the servos at 5 V. The converter model is not yet confirmed. See D014.
 - The encoders run on 12 V, connected before the cut-off switch. Pull-up resistors to 3.3 V keep their open-collector outputs at the microcontroller's logic level.
 - The laptop USB powers the microcontroller, the edge sensors and the display. All grounds are connected.
 
@@ -217,7 +218,7 @@ Option 2:
 
 - Two cables leave the robot at the rear.
 - If the USB cable comes loose, the microcontroller loses power, and pull-down resistors on the driver inputs stop the motors.
-- When the converter model is known, check it and the driver chips against the stall currents of the motors and servos.
+- When the converter model is known, check it and the driver chips against the stall currents of the motors and servos. See D014.
 - The battery rules in `CLAUDE.md` apply only if a battery is added later.
 
 ## D006: Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks
@@ -239,7 +240,7 @@ The robot drives on tracks. The first draft proposed Pololu micro metal gearmoto
 
 Option 2:
 - 2 × [DAGU DG01D 48:1 hobby gearmotor](https://www.sparkfun.com/hobby-gearmotor-140-rpm-pair.html) with an output shaft on both sides, about 140 RPM without load at a suggested 4.5 V. Each one drives a rear sprocket.
-- 2 × Yumo E6A2-CW3C encoders, 200 pulses per turn, open-collector outputs, the same as the Omron E6A2-CW3C ([datasheet](https://www.fa.omron.co.jp/data_pdf/cat/e6a2-c_ds_e_8_2_csm490.pdf)). The second motor shaft turns each encoder through a printed TPU coupling. Each encoder has its own bracket, because its shaft takes at most 10 N of side load.
+- 2 × Yumo E6A2-CW3C encoders, 200 pulses per turn, open-collector outputs, the same as the Omron E6A2-CW3C ([datasheet](https://files.omron.eu/downloads/latest/datasheet/en/e6a2-c_incremental_25-mm-dia._rotary_encoder_datasheet_en.pdf)). The second motor shaft turns each encoder through a printed TPU coupling. Each encoder has its own bracket, because its shaft takes at most 10 N of side load.
 - 2 × [TI L293DNE](https://www.ti.com/lit/gpn/l293d), two motor channels per chip: one chip for the track motors, one for the linear actuator. The fallback for the track motors is an L298N driver module from the lab.
 - Tracks printed in TPU as closed bands with teeth on the inside, on printed PLA sprockets with guide ridges. The front sprocket runs free in a slotted mount, so the track tension can be adjusted after printing.
 
@@ -282,7 +283,7 @@ Edge safety has the highest priority, and M.A.T.S drives to the edge on purpose 
 
 ### Consequences
 
-- The order list goes to the faculty in I1. There is no spare. Until the sensors arrive, the drive and the arms are tested with lab parts.
+- The order list goes to the faculty in I1. There is no spare. Until the sensors arrive, the drive and the arms are tested with lab parts. They have been received (`bom.csv`).
 - The low level checks the edge sensors in every loop iteration before it applies any motor command. A track may move forward only while the sensor ahead of it sees the table.
 
 ## D008: Dump mechanism: servo-driven arms and a linear actuator
@@ -352,7 +353,7 @@ The face is the main way the robot shows its state (topic C: animatronics). The 
 - One shared enum holds the seven states, and the renderer draws the current one.
 - Surprised uses the IMU (D010) together with the edge sensors.
 - Recognition test with at least 10 people outside the group.
-- The datasheet of the display module is not yet linked.
+- The module is documented on [LCDwiki (MSP2807)](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), with the [ILI9341 datasheet](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf). That it is the same board as the lab's module is not yet confirmed (14 pins, 50 × 86 mm board).
 
 ## D010: IMU: SparkFun OpenLog Artemis
 
@@ -465,7 +466,7 @@ Option 3:
 
 ### Context
 
-The firmware for the Arduino Nano ESP32 (D004) had no toolchain yet. Project 2 is due on 22 November and asks for the robot software with setup and run instructions (`docs/ASSIGNMENT_2.md`). Both team members need the same toolchain and library versions, and `CLAUDE.md` rules out global installs and unpinned dependencies. The pin map is in `docs/schematics.pdf`, with Arduino pin labels.
+The firmware for the Arduino Nano ESP32 (D004) had no toolchain yet. Project 2 is due on 22 November and asks for the robot software with setup and run instructions (`docs/ASSIGNMENT_2.md`). Both team members need the same toolchain and library versions, and `CLAUDE.md` rules out global installs and unpinned dependencies. The pin map is in `electronics/schematics.pdf`, with Arduino pin labels.
 
 ### Options
 
@@ -506,6 +507,41 @@ The firmware for the Arduino Nano ESP32 (D004) had no toolchain yet. Project 2 i
   - D12 is the default SPI MISO pin and the IMU input. The display SPI starts without MISO.
   - D8 is the default UART1 TX pin and a track input. Serial1 starts with no TX pin.
 - Step 1 of the firmware is a bench console with no edge reflex. The safety layer and the dump cycle follow in step 2, and the state machine with laptop unit tests (`pio test`) in step 3.
+
+## D014: Step-down converters: LM2596 for the motors, Mateksys BEC12S-PRO for the servos
+
+- **Date:** 2026-11-20
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+D005 calls for one adjustable step-down converter for the track motors, set so that the motors get about their suggested 4.5 V at full speed, and a second converter for the servos at 5 V. It left the converter model open. The lab has one LM2596 buck converter module and one Mateksys BEC12S-PRO.
+
+### Options
+
+1. The LM2596 feeds the track motors, and the Mateksys feeds the servos.
+2. The Mateksys feeds the track motors, and the LM2596 feeds the servos.
+
+### Choice
+
+Option 1:
+- An LM2596 buck converter module ([datasheet](https://htckorea.co.kr/image/DK/LM2596_Module_R1.0.pdf)) feeds the track motors through the L293D. Input 4–35 V, at least 1.5 V above the output. Output adjustable from 1.25 V to 30 V, 2 A rated and 3 A at most with a heat sink.
+- A [Mateksys BEC12S-PRO](https://www.mateksys.com/?portfolio=bec12s-pro) feeds the two servos at 5.2 V. Input 9–55 V. Output 5.2 V (default), 8 V or 12 V, 5 A continuous and 9 A peak.
+
+### Reasons
+
+- The Mateksys has only three fixed outputs, so it cannot give the motors about 4.5 V. The LM2596 can be set to any voltage in its range.
+- 5.2 V is inside the 4.8–6 V operating range of the SER0006 ([DFRobot product page](https://www.dfrobot.com/product-255.html)).
+- The SER0006 draws at most 1000 mA when it stalls at 6 V (DFRobot product page). The Mateksys gives 5 A continuously, so both servos can stall at the same time. The same page lists 8000 mA at 4.8 V, which is most likely a typo for 800 mA, since the stall current falls with the voltage.
+- The 12 V bench supply is inside the input range of both converters.
+
+### Consequences
+
+- Check the Mateksys output with a multimeter before the servos are connected. 8 V or 12 V would damage them.
+- The Mateksys has no protection against a reversed input, so check the polarity of its 12 V input before switching on.
+- Set the LM2596 while measuring at the motor terminals at full duty. The L293D drops part of the voltage (SLRS008D, section 6.5), so the converter output reads higher than the motor voltage.
+- Neither the DAGU drawing nor the SparkFun page gives the stall current of the DG01D. Measure it, and compare it with the 600 mA continuous limit per L293D channel (SLRS008D, section 6.1) and the 2 A rating of the LM2596. This completes the stall-current check that D005 asks for.
 
 ## Template
 
