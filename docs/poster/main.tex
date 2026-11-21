@@ -1,0 +1,102 @@
+\documentclass[12pt,a3paper]{article}
+\usepackage{better_poster}
+\usepackage{qrcode}
+
+% Marks text that is still missing. Search for "FILL IN" before printing.
+\newcommand{\fillin}[1]{\textcolor{red}{[FILL IN: #1]}}
+
+% authors
+\title{A tracked desk robot that shows emotions while it cleans your table}
+\author{A project in IN5590 by Markus Yuki Nishimura and Martin Haugen\\
+E-mail: \mbox{markusyn@uio.no}, \mbox{martin27@uio.no}}
+
+% type of poster: [exp]erimental results, [methods], [theory]
+\newcommand\postertype{exp}
+
+\begin{document}
+
+% header: the name of the robot, with the full name below in smaller text
+\makefinding{
+    \textbf{M.A.T.S}\\[0.3em]
+    {\fontsize{24}{30}\selectfont Mechanized Assistant for Tabletop Sanitation}
+}
+
+\makemain{
+    % space between paragraphs (the column box sets it to zero)
+    \setlength{\parskip}{0.5em}
+    \raggedcolumns
+    \begin{multicols}{2}
+        \section{Intro}
+        Desks collect crumbs, dust and eraser debris. M.A.T.S drives on tracks and
+        pushes the debris ahead of a brush to the table edge. There it lowers a bucket
+        on two arms over the edge, and the brush pushes the debris into the bucket. A
+        display in its head shows seven states: neutral, working, happy, sad,
+        surprised, scared and angry.
+
+        Our goals:
+        \begin{itemize}
+        \setlength\itemsep{0.1em}\setlength\parskip{0pt}
+            \item \textbf{Physical design:} the bucket reaches past the table edge and
+            stays upright, and the robot never tips.
+            \item \textbf{Safety:} stop before a track leaves the table, lock the
+            tracks while the bucket is lowered, and cut all motor power with a switch.
+            \item \textbf{Mobility:} drive 1\,m forward and back, and turn
+            360$^\circ$ in place.
+            \item \textbf{Expression:} show the seven states as animations.
+        \end{itemize}
+
+        \section{Tools}
+        We designed the robot in SolidWorks and printed the PLA parts on a Creality
+        Ender-3 V3 SE. The lab engineer printed the TPU tracks. Key components:
+        \begin{itemize}
+        \setlength\itemsep{0.1em}\setlength\parskip{0pt}
+            \item Arduino Nano ESP32 microcontroller
+            \item 2 DAGU DG01D gearmotors with encoders
+            \item 2 L293D motor driver chips
+            \item 2 micro servos and a linear actuator for the arms
+            \item 2 VL53L4CD time-of-flight edge sensors
+            \item 2.8-inch ILI9341 display and an IMU
+        \end{itemize}
+
+    % this determines where the columns are separated
+    \columnbreak
+
+        \textbf{Software.} The firmware is written in C++17 on the Arduino-ESP32 core
+        and built with PlatformIO. One core runs the low-level control loop: the edge
+        reflex, the motor, servo and actuator control, and the dump interlock. The
+        other core runs the cleaning behavior, the emotion state and the face. A track
+        may move forward only while the edge sensor ahead of it sees the table, and the
+        cleaning behavior can never override this. The display uses the Adafruit
+        ILI9341 and GFX libraries, and the edge sensors use the STM32duino VL53L4CD
+        library.
+
+        \textbf{Optimization.} \fillin{what we optimized and how we did it}
+
+        \section{Conclusion}
+        \fillin{how far we came in reaching the goals}
+
+        \fillin{the results of the optimization}
+
+        \textbf{Future work.} \fillin{what would improve the robot, and what we would
+        do differently}
+
+    \end{multicols}
+}
+% figures (no blank line above, or this column moves below the main column)
+\makeextracolumn{
+    \includegraphics[width=\linewidth]{1assembled.PNG}
+
+    {\small \textbf{Figure 1.} M.A.T.S assembled in SolidWorks.}
+
+    \vspace{1em}
+    \includegraphics[width=\linewidth]{2physical_prototype.jpg}
+
+    {\small \textbf{Figure 2.} The printed prototype.}
+}
+
+% footer: UiO logo on the left, QR code to the project 2 repo on the right
+\makealtfooter{images/uni_logo.pdf}{%
+    \qrcode[height=0.11\paperheight]{https://github.uio.no/martin27/in5590\_project2}%
+}
+
+\end{document}

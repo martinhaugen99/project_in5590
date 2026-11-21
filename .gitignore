@@ -26,3 +26,10 @@ multirun/
 
 # print files
 *.STL
+
+# LaTeX build outputs for the poster (main.pdf is the deliverable and stays tracked)
+docs/poster/*.aux
+docs/poster/*.fdb_latexmk
+docs/poster/*.fls
+docs/poster/*.log
+docs/poster/*.synctex.gz
