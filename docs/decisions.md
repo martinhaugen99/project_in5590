@@ -9,7 +9,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D003 | 2026-10-21 | Concept change: the M.A.T.S desk cleaner replaces the DeskPal desk companion | Accepted |
 | D004 | 2026-10-21 | Compute: one Arduino Nano ESP32 runs both layers | Accepted |
 | D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted; bench supply superseded by D017 |
-| D006 | 2026-10-22 | Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks | Accepted |
+| D006 | 2026-10-22 | Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks | Accepted; encoder coupling superseded by D018 |
 | D007 | 2026-10-22 | Edge sensing: two time-of-flight sensors, one ahead of each track | Accepted |
 | D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted |
 | D009 | 2026-10-22 | Display and the seven states | Accepted |
@@ -21,6 +21,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D015 | 2026-11-20 | Wiring diagrams in WireViz are the source of truth for pins and wiring | Accepted |
 | D016 | 2026-11-21 | Cut-off switch: SCI R13-66 rocker, bench supply current limit 2.5 A | Accepted; current limit superseded by D017 |
 | D017 | 2026-11-21 | Power source: 12 V wall adapter replaces the bench supply | Accepted |
+| D018 | 2026-11-21 | Encoder couplings printed in PLA instead of TPU | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -227,7 +228,7 @@ Option 2:
 ## D006: Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks
 
 - **Date:** 2026-10-22
-- **Status:** Accepted
+- **Status:** Accepted; encoder coupling superseded by D018
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -662,6 +663,35 @@ Option 2: the ATS036T-W120V adapter. The + and − wires were identified with a 
 - The protection thresholds of the ATS036T-W120V are not published. The datasheet of the sibling model ATS036T-P120 lists over-current protection at up to 170 % and short-circuit protection with automatic recovery, which is not confirmed for this model.
 - There is no current display. During the first powered tests, measure the current with a multimeter in series in the + wire, together with the motor stall current (D014).
 - BOM item 11, wiring sheet 03 (PS1) and the hardware table in `CLAUDE.md` name the adapter.
+
+## D018: Encoder couplings printed in PLA instead of TPU
+
+- **Date:** 2026-11-21
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+D006 says that the second motor shaft turns each encoder through a printed TPU coupling. The two couplings on the robot (`cad/body/coupling_drive_motor_encoder.SLDPRT`) are printed in PLA instead. The first print was marked for a redesign in `print/print_params.md`, and the fixed part was committed on 2026-11-19 (commit 3fd1943). BOM item 19 listed TPU for the couplings until 2026-11-21.
+
+### Options
+
+1. A printed TPU coupling, as in D006.
+2. A printed PLA coupling.
+
+### Choice
+
+Option 2: two PLA couplings, printed on the Creality Ender-3 V3 SE with 100 % infill and a 0.2 mm layer height (`print/print_params.md`).
+
+### Reasons
+
+- The coupling had to go through a couple of iterations, and since we had no free access to the printer with TPU, the process was faster using PLA. The encoder mount and the motor mount make sure that the two shafts are aligned.
+
+### Consequences
+
+- The TPU encoder coupling in D006 is replaced. The rest of D006 still applies.
+- PLA is rigid, so the coupling does not take up an offset between the motor shaft and the encoder shaft. Any offset becomes side load on the encoder shaft, which takes at most 10 N (D006). The encoder mount and the motor mount must keep the shafts in line.
+- BOM item 19 and `print/print_params.md` already list PLA for the couplings.
 
 ## Template
 

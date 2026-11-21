@@ -17,7 +17,7 @@ item,component,part,function,mpn,supplier,link,datasheet,qty,unit_price,currency
 16,brush,"RS PRO nylon brush strip, cut to width",The brush,,RS,https://no.rs-online.com/web/p/door-seals/3269814,,1,,,,received,,RS 326-9814. D008
 17,bearing,Ball bearings,Bucket pivots,,Lab,,,2,,,,lab,,Size to be measured. D008
 18,ballast,Lead or steel weights,Keep the bucket upright,,Lab,,,,,,,lab,,D008
-19,filament,PLA and TPU,Printed parts; TPU for the tracks and the encoder couplings,,Lab,,,,,,,lab,,
+19,filament,PLA and TPU 85A,Printed parts; TPU for the tracks,,Lab,,,,,,,lab,,
 20,small_parts,"Solderable board, IC sockets, pull-up and pull-down resistors, wires, connectors, M2/M3 screws",Assembly,,Lab,,,,,,,lab,,
 21,camera,Raspberry Pi 5 and Raspberry Pi camera,Find dirty spots (Could),,Lab,,,1,,,,optional,,D004
 22,bypass_capacitor,"Ceramic capacitor 0.1 µF, 50 V, X7R, radial, 2.54 mm lead spacing",Bypass at VCC1 and VCC2 of both L293D chips,SR205C104KAR,Farnell,https://no.farnell.com/en-NO/avx/sr205c104kar/cap-0-1-f-50v-10-x7r/dp/1100367,,4,,,,to_order,,"KYOCERA AVX, Farnell order code 1100367. TI SLRS008D section 10 asks for 0.1 µF or more at VCC1 and VCC2. 50 V covers the 12 V rail at U3. C1-C4 in electronics/wiring/02_drivers.yml. If the lab has 0.1 µF ceramic capacitors, use those and set the status to lab."
