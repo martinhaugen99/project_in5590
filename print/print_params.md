@@ -1,5 +1,7 @@
 # Print parameters:
 
+Printer: Creality Ender-3 V3 SE (Isaac) for all except tracks
+
 Layer height 0.2mm for all except tracks
 
 PLA for all except tracks
@@ -24,7 +26,15 @@ PLA for all except tracks
 - track idler screw(x2): 100% infill
 - track sprocket drive(x2): 60% infill
 - track sprocket idler(x2): 60% infill
-- track(x2, tpu): 15% infill, 0.18 mm layer height
+- track(x2, tpu): printed by the lab engineer on a printer we do not know. Settings from his slicer screenshot (`track_tpu_settings.png`):
+  - process preset: "0.18mm Standard @BBL X1C 0.6 nozzle", which suggests a Bambu Lab X1 Carbon with a 0.6 mm nozzle (not confirmed)
+  - material: TPU 85A
+  - layer height: 0.18 mm
+  - walls: 2 loops
+  - top shell: 3 layers, 0.8 mm, monotonic
+  - bottom shell: 3 layers, monotonic
+  - infill: 15% grid, internal solid infill rectilinear
+  - unknown: orientation, supports, temperatures and speeds
 
 ## Bucket Arms:
 
