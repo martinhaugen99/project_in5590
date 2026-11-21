@@ -33,14 +33,14 @@ buttons ──────────────────► HIGH LEVEL: cl
 | Compute architecture | MCU only: both layers on the two cores of the microcontroller. A laptop on USB powers it and logs data | D004 |
 | Microcontroller | [Arduino Nano ESP32](https://store.arduino.cc/products/nano-esp32): ESP32-S3, 3.3 V logic | D004 |
 | Single-board computer | None for the Must and Should goals | D004 |
-| Display | 2.8" SPI TFT module ([LCDwiki MSP2807](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), match with the lab board not yet confirmed), [ILI9341](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf) controller, 240 × 320 pixels (board V1.2), in a fixed head | D009 |
+| Display | 2.8" SPI TFT module ([LCDwiki MSP2807](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), touch version, match with the lab board confirmed 2026-11-21; touch not used), [ILI9341](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf) controller, 240 × 320 pixels (board V1.2), in a fixed head | D009 |
 | Dirt detection (Could) | Raspberry Pi 5 with a Raspberry Pi camera | D004 |
 | Edge sensing | 2 × VL53L4CD time-of-flight sensors ([ST SATEL-VL53L4CD](https://no.rs-online.com/web/p/sensor-development-tools/2410906), RS 241-0906) on the brush bracket, one ahead of each track. No rear sensors | D007 |
 | Motors + driver | 2 × [DAGU DG01D 48:1](https://www.sparkfun.com/hobby-gearmotor-140-rpm-pair.html) gearmotors, about 140 RPM without load, suggested 4.5 V; 2 × Yumo E6A2-CW3C encoders, 200 pulses per turn, open collector ([datasheet](https://files.omron.eu/downloads/latest/datasheet/en/e6a2-c_incremental_25-mm-dia._rotary_encoder_datasheet_en.pdf)); 2 × [TI L293DNE](https://www.ti.com/lit/gpn/l293d), one for the track motors, one for the linear actuator | D006 |
 | Tracks | Printed TPU bands with teeth on the inside, printed PLA sprockets with guide ridges, front sprocket in a slotted mount for tension | D006 |
 | Arm actuators | 2 × [DFRobot SER0006](https://www.dfrobot.com/product-255.html) micro servos (180°) for the brush arm and the bucket arms, plus a larger lab servo as a spare; [Actuonix PQ12-100-12-P](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf) linear actuator, 20 mm stroke, 12 V, position feedback | D008 |
 | IMU | [SparkFun OpenLog Artemis](https://www.sparkfun.com/sparkfun-openlog-artemis.html) with its built-in ICM-20948, data over serial | D010 |
-| Power | 12 V bench supply for the actuators and the encoders, with a cut-off switch on the robot; an LM2596 step-down module for the track motors and a [Mateksys BEC12S-PRO](https://www.mateksys.com/?portfolio=bec12s-pro) set to 5.2 V for the servos; laptop USB for the microcontroller, edge sensors and display. No battery | D005, D014 |
+| Power | 12 V wall adapter (Adapter Tech ATS036T-W120V: 12 V DC, 3 A, 36 W, LPS) for the actuators and the encoders, with a cut-off switch on the robot (SCI R13-66 rocker from the lab, AC ratings only, 10 A 250 VAC); an LM2596 step-down module for the track motors and a [Mateksys BEC12S-PRO](https://www.mateksys.com/?portfolio=bec12s-pro) set to 5.2 V for the servos; laptop USB for the microcontroller, edge sensors and display. No battery | D005, D014, D016, D017 |
 
 When a choice changes, record it in a new decision entry and update its row with the part, its key specs, a datasheet link and the decision ID (D###).
 - Already on hand or provided by the lab: every part in `bom.csv` with status `lab` (confirmed 2026-10-24); printer Isaac (Creality Ender-3 V3 SE); PLA and TPU filament; CNC access
@@ -50,7 +50,7 @@ When a choice changes, record it in a new decision entry and update its row with
 
 - **No Docker.** Every part of the project uses a project-local, pinned environment, and nothing is installed globally on the host (see "Environment setup").
 - CAD: SolidWorks, AutoDesk
-- Firmware: C++17 on the Arduino-ESP32 core 3.3.12, built with PlatformIO (platform `espressif32@8.0.0`) run through uv, source in `firmware/` (D013). GPIO pin numbering, pins in `firmware/include/pins.h` from `electronics/schematics.pdf`.
+- Firmware: C++17 on the Arduino-ESP32 core 3.3.12, built with PlatformIO (platform `espressif32@8.0.0`) run through uv, source in `firmware/` (D013). GPIO pin numbering, pins in `firmware/include/pins.h`, which must match the wiring sheets in `electronics/wiring/` (D015).
 - High-level language and framework: the high level runs on the microcontroller next to the low level (D004), with no separate high-level computer or framework.
 - Host-side Python (experiments, analysis, tools): package `mats` in `src/mats/`, Python 3.13.
   - Environment and dependencies: uv. `pyproject.toml` holds version ranges, `uv.lock` pins exact versions and is committed.
@@ -58,6 +58,7 @@ When a choice changes, record it in a new decision entry and update its row with
   - Type checking: mypy in strict mode. Tests: pytest. Git hooks: pre-commit.
   - Experiment configuration: Hydra 1.3 (`hydra-core>=1.3.7,<1.4`). See "Experiments with Hydra".
   - All tool settings live in `pyproject.toml` and `.pre-commit-config.yaml`.
+- Wiring diagrams: WireViz 0.4.1 (dev dependency) with Graphviz from Homebrew, sources in `electronics/wiring/`, rules in `.claude/skills/wiring-diagram/SKILL.md` (D015).
 - Version control: git, hosted on GitHub (`martinhaugen99/project_in5590`)
 
 ## Repository layout (proposed; create folders only when needed)
@@ -66,7 +67,7 @@ When a choice changes, record it in a new decision entry and update its row with
 project_in5590/
 ├── cad/              # SolidWorks source + STEP exports (structure and lock workflow: cad/README.md)
 ├── print/            # STL/3MF + print settings per part
-├── electronics/      # Wiring diagram, schematic, datasheets, pinout.md (single source of truth for pins)
+├── electronics/      # wiring/ (WireViz sheets: single source of truth for pins and wiring, D015), datasheets
 ├── firmware/         # Low-level controller code
 ├── software/         # Code for the Raspberry Pi 5 (only if the Could camera is added)
 ├── assets/emotions/  # Source graphics/animations for each state
@@ -145,6 +146,7 @@ project_in5590/
 # Flash firmware:         uv run pio run -d firmware -t upload   # hardware action: needs confirmation
 # Serial monitor / logs:  uv run pio device monitor -d firmware
 # Run high-level code:    part of the firmware (D004)
+# Render a wiring sheet:  uv run wireviz -f s electronics/wiring/<sheet>.yml
 ```
 Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv run isort .` step does not apply in this project.
 
@@ -225,7 +227,7 @@ Early development: no backward-compatibility shims, no deprecated code kept arou
 
 ## Safety
 
-- Power comes from a 12 V bench supply and the laptop USB, with no battery (D005). If a battery is added later: use a protected pack or a BMS, fuse the battery output, charge only with a proper charger, and never charge unattended.
+- Power comes from a 12 V wall adapter (D017) and the laptop USB, with no battery (D005). If a battery is added later: use a protected pack or a BMS, fuse the battery output, charge only with a proper charger, and never charge unattended.
 - Follow the lab's rules for the 3D printers and CNC machines.
 
 ## Governance & maintenance

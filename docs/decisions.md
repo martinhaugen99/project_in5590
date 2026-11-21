@@ -8,7 +8,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D002 | 2026-10-10 | Hydra 1.3 for experiment configuration | Accepted |
 | D003 | 2026-10-21 | Concept change: the M.A.T.S desk cleaner replaces the DeskPal desk companion | Accepted |
 | D004 | 2026-10-21 | Compute: one Arduino Nano ESP32 runs both layers | Accepted |
-| D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted |
+| D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted; bench supply superseded by D017 |
 | D006 | 2026-10-22 | Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks | Accepted |
 | D007 | 2026-10-22 | Edge sensing: two time-of-flight sensors, one ahead of each track | Accepted |
 | D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted |
@@ -18,6 +18,9 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D012 | 2026-10-24 | CAD: module owners and a table of shared dimensions | Accepted |
 | D013 | 2026-11-19 | Firmware toolchain: PlatformIO through uv, Arduino-ESP32 core 3.3.12 | Accepted |
 | D014 | 2026-11-20 | Step-down converters: LM2596 for the motors, Mateksys BEC12S-PRO for the servos | Accepted |
+| D015 | 2026-11-20 | Wiring diagrams in WireViz are the source of truth for pins and wiring | Accepted |
+| D016 | 2026-11-21 | Cut-off switch: SCI R13-66 rocker, bench supply current limit 2.5 A | Accepted; current limit superseded by D017 |
+| D017 | 2026-11-21 | Power source: 12 V wall adapter replaces the bench supply | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -188,7 +191,7 @@ Option 2: [Arduino Nano ESP32](https://store.arduino.cc/products/nano-esp32) (ES
 ## D005: Power: 12 V bench supply and laptop USB
 
 - **Date:** 2026-10-21
-- **Status:** Accepted
+- **Status:** Accepted; the bench supply is superseded by D017 (12 V wall adapter)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -354,6 +357,7 @@ The face is the main way the robot shows its state (topic C: animatronics). The 
 - Surprised uses the IMU (D010) together with the edge sensors.
 - Recognition test with at least 10 people outside the group.
 - The module is documented on [LCDwiki (MSP2807)](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), with the [ILI9341 datasheet](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf). That it is the same board as the lab's module is not yet confirmed (14 pins, 50 × 86 mm board).
+- Confirmed on 2026-11-21: the lab board has 14 pins and measures about 50 × 86 mm, so it is the MSP2807 touch version. The touch controller is not used.
 
 ## D010: IMU: SparkFun OpenLog Artemis
 
@@ -542,6 +546,122 @@ Option 1:
 - The Mateksys has no protection against a reversed input, so check the polarity of its 12 V input before switching on.
 - Set the LM2596 while measuring at the motor terminals at full duty. The L293D drops part of the voltage (SLRS008D, section 6.5), so the converter output reads higher than the motor voltage.
 - Neither the DAGU drawing nor the SparkFun page gives the stall current of the DG01D. Measure it, and compare it with the 600 mA continuous limit per L293D channel (SLRS008D, section 6.1) and the 2 A rating of the LM2596. This completes the stall-current check that D005 asks for.
+
+## D015: Wiring diagrams in WireViz are the source of truth for pins and wiring
+
+- **Date:** 2026-11-20
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+`electronics/schematics.pdf` shows the connections with net labels only. It draws no wires and has no power section, so it is hard to trace a signal. `CLAUDE.md` names `electronics/pinout.md` as the single source of truth for pins, but that file was never written. The pins in `firmware/include/pins.h` were taken from `schematics.pdf`.
+
+### Options
+
+1. Write `electronics/pinout.md` as a pin table, and keep `schematics.pdf` as the drawing.
+2. Describe every wire in [WireViz](https://github.com/wireviz/WireViz) YAML files in `electronics/wiring/`, render them to SVG, and make these files the source of truth.
+
+### Choice
+
+Option 2:
+- WireViz 0.4.1 is a dev dependency in `uv.lock`. It needs Graphviz (`brew install graphviz`).
+- Three sheets: `01_signals.yml`, `02_drivers.yml` and `03_power.yml`, each rendered to an SVG next to it with `uv run wireviz -f s electronics/wiring/<sheet>.yml`. The `.yml` and the `.svg` are committed.
+- The project skill `.claude/skills/wiring-diagram/SKILL.md` holds the drawing rules and the wire color convention. The robot has no fixed wire colors, so the drawings use that convention.
+- The display's J1 jumper is open on the lab board (checked 2026-11-21), so its VCC is drawn on 5 V from Nano VBUS (JP1-12), as the module schematic requires (LCDwiki: J1 open for 5 V, bridged for 3.3 V). VBUS carries the USB-C 5 V directly (Nano ESP32 datasheet 11.4). The LED input stays on 3.3 V.
+
+### Reasons
+
+- The drawing shows every wire from pin to pin, with its color and net name.
+- Plain text files: each change shows up in a git diff and can be reviewed.
+- No separate pin table to keep in step with the drawing.
+
+### Consequences
+
+- A pin change starts in the sheet, then `pins.h` follows. The skill checks that the two agree.
+- `electronics/pinout.md` is not written.
+- `schematics.pdf` stays the reference for sheets 02 and 03 until they are drawn. After that, update the source references in `pins.h` and `README.md`.
+
+## D016: Cut-off switch: SCI R13-66 rocker, bench supply current limit 2.5 A
+
+- **Date:** 2026-11-21
+- **Status:** Accepted; the 2.5 A current limit is superseded by D017 (the wall adapter has no adjustable limit)
+- **Decided by:** Martin
+
+### Context
+
+D005 calls for a switch on the robot that cuts the power to all motors, servos and the linear actuator, but it names no part. Three switches were found in the lab. All three carry AC ratings only:
+
+1. A switch marked 2 A 250 V and 4 A 125 V.
+2. An SCI R13-66 rocker, 2 terminals, marked 16 A 125 VAC 1/3 HP, 10 A 250 VAC 1/2 HP, 10(4) A 250 V~ 10E3, 25T85, and 10 A 125 VAC / 6 A 250 VAC.
+3. A round rocker marked 6(2) A 250 V~ 1E4 µ, 10 A 125 V~ T105C, T125/55.
+
+Estimated worst-case current through the switch, with every load stalled at the same time:
+
+| Load | Power from 12 V | Source |
+|---|---|---|
+| 2 servos through the BEC | 2 × 1 A × 5.2 V = 10.4 W, at 88 % efficiency ≈ 11.8 W | Stall current at 6 V ([DFRobot](https://www.dfrobot.com/product-255.html)); efficiency 88–96 % (Matek BEC12S-PRO manual) |
+| 2 track motors through the LM2596 | 2 × 0.6 A × about 7.1 V ≈ 8.5 W, at 73 % efficiency ≈ 11.7 W | 600 mA continuous per L293D channel, about 2.6 V drop at 0.6 A ([TI SLRS008D](https://www.ti.com/lit/ds/symlink/l293d.pdf) 6.1, 6.5); 73 % at 12 V in and 3 A (HTC LM2596 datasheet) |
+| Linear actuator | 0.21 A × 12 V ≈ 2.5 W | Stall current at 12 V ([Actuonix PQ12](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf)) |
+| Logic of both L293D chips | 2 × 60 mA × 5.2 V, through the BEC ≈ 0.7 W | ICC1 max (TI SLRS008D 6.5) |
+| **Total** | **≈ 27 W, about 2.2 A at 12 V** | |
+
+The motor line assumes the L293D limit, because the DG01D stall current is not measured yet (D014). The encoders connect before the switch (D005) and are not included.
+
+### Options
+
+1. Switch 1.
+2. Switch 2, the SCI R13-66 rocker.
+3. Switch 3.
+
+### Choice
+
+Option 2: the SCI R13-66 rocker, SW1 on wiring sheet 03, in the + wire after the junction that feeds the encoders. It has two terminals, so either terminal can take the input. The bench supply current limit starts at 2.5 A.
+
+### Reasons
+
+- Switch 2 has the largest rating: 10 A at 250 V AC and 16 A at 125 V AC, about 4–7 times the estimated 2.2 A.
+- The R13-66 series is also built in DC versions rated 16 A at 12 V DC ([TME listing](https://www.tme.eu/html/EN/switch-rocker-sci/ramka_1328_EN_pelny.html)). The lab unit carries AC markings only, so a DC rating is not guaranteed for it.
+- Switch 1 is rated at most 4 A (AC), less than twice the estimate. Switch 3 has less margin than switch 2.
+- 2.5 A stays above the estimated worst case, so it should not limit normal operation, and it caps the current if something shorts.
+
+### Consequences
+
+- Watch the current on the bench supply display during the first tests. If the supply limits the current in normal driving, the estimate is too low: measure the motor stall current (D014) and revisit the limit.
+- BOM item 14 and wiring sheet 03 name the part.
+
+## D017: Power source: 12 V wall adapter replaces the bench supply
+
+- **Date:** 2026-11-21
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+D005 powers the actuators and the encoders from a 12 V bench supply from the lab, and D016 sets its current limit to 2.5 A. The team has a 12 V wall adapter on hand instead, with its output cable cut and split into two wires. Its label reads: Adapter Tech., model ATS036T-W120V; input 100–240 V~ 50–60 Hz, 1 A max; output 12.0 V DC, 3.0 A, 36.0 W; IEC 60950-1; marked LPS, double insulation (Class II), indoor use and efficiency level VI.
+
+### Options
+
+1. Keep the plan: a lab bench supply with a 2.5 A current limit.
+2. The 12 V wall adapter.
+
+### Choice
+
+Option 2: the ATS036T-W120V adapter. The + and − wires were identified with a multimeter and labeled.
+
+### Reasons
+
+- It is rated 3.0 A (36 W), above the estimated worst case of about 2.2 A (27 W) in D016.
+- It measured 12.27 V with no load (2026-11-21). That is below the encoders' maximum of 13.2 V (5 V −5 % to 12 V +10 %, Omron E6A2-C datasheet) and inside the input range of both converters (LM2596 module 4–35 V, BEC12S-PRO 9–55 V).
+- The LPS (Limited Power Source, IEC 60950-1) mark means the output stays limited even with a single fault. For outputs of 30 V or less without an overcurrent device, the limits are a short-circuit current of at most 8 A and at most 100 VA ([Bel Fuse summary](https://www.belfuse.com/resource-library/blog/overview-of-limited-power-source-lps-requirements)). This takes over the protective role of the bench supply's current limit.
+
+### Consequences
+
+- The bench supply in D005 and the 2.5 A current limit in D016 are replaced. The rest of D005 and D016 still applies.
+- The LPS limits are well above the 3 A rating. They protect against fire, not against overloading a single part.
+- The protection thresholds of the ATS036T-W120V are not published. The datasheet of the sibling model ATS036T-P120 lists over-current protection at up to 170 % and short-circuit protection with automatic recovery, which is not confirmed for this model.
+- There is no current display. During the first powered tests, measure the current with a multimeter in series in the + wire, together with the motor stall current (D014).
+- BOM item 11, wiring sheet 03 (PS1) and the hardware table in `CLAUDE.md` name the adapter.
 
 ## Template
 
