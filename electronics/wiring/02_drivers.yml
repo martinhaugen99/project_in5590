@@ -1,0 +1,296 @@
+# Sheet 02: Nano ESP32 to both L293D chips, track motors, linear actuator and the
+# enable and pull-down resistors (D015).
+# Render: uv run wireviz -f s electronics/wiring/02_drivers.yml
+# Rules and color convention: .claude/skills/wiring-diagram/SKILL.md
+# Layout: rails, buses and the Nano on the left, resistors and drivers in the middle,
+# motors and actuator on the right.
+
+metadata:
+  title: "M.A.T.S wiring, sheet 02: motor drivers"
+
+connectors:
+  RAIL_VM_TRACK:
+    style: simple
+    type: VM_TRACK rail
+    notes: |
+      LM2596 output, after the cut-off switch (sheet 03).
+      Set for about 4.5 V at the motors (D014),
+      and never below VCC1 = 5.2 V (TI SLRS008D 6.3)
+
+  RAIL_12V_ACT:
+    style: simple
+    type: +12V_ACT rail
+    notes: |
+      12 V adapter, after the
+      cut-off switch (sheet 03, D017)
+
+  RAIL_5V_SERVO:
+    style: simple
+    type: +5V_SERVO rail
+    notes: |
+      5.2 V from the BEC12S-PRO, after the
+      cut-off switch (sheet 03). L293D logic supply
+
+  BUS_3V3:
+    style: simple
+    type: +3V3_LOGIC bus
+    notes: Same bus as sheet 01
+
+  BUS_GND:
+    style: simple
+    type: GND bus
+    notes: Same bus as sheet 01
+
+  U1:
+    type: Arduino Nano ESP32 (ABX00083)
+    pins: [JP1-4, JP2-3, JP2-4, JP2-5, JP2-6, JP2-7, JP2-14, JP2-15]
+    pinlabels: [A0 GPIO1, D10 GPIO21, D9 GPIO18, D8 GPIO17, D7 GPIO10, D6 GPIO9,
+                D0 GPIO44, D1 GPIO43]
+    notes: |
+      Header pins: ABX00083 datasheet, section 12.
+      D0/D1 are UART0 RX/TX: the boot ROM prints on D1
+      at reset, while MOTOR_ENABLE is still low (pins.h).
+      Other pins: sheet 01.
+
+  R1:
+    type: Resistor 1 kOhm
+    subtype: series, D0 to MOTOR_ENABLE
+    pins: [1, 2]
+
+  R2:
+    type: Resistor 10 kOhm
+    subtype: MOTOR_ENABLE to GND
+    pins: [1, 2]
+    notes: |
+      Holds all four enable inputs low
+      while D0 floats
+
+  R4_R9:
+    type: Resistors 10 kOhm, pull-downs
+    pins: [1, 2, 3, 4, 5, 6, 7]
+    pinlabels: [R4 ACT_IN2, R5 LEFT_IN1, R6 LEFT_IN2, R7 RIGHT_IN1, R8 RIGHT_IN2,
+                R9 ACT_IN1, GND (all six)]
+    notes: |
+      One 10 kOhm resistor from each driver input to GND.
+      They hold the inputs low if the USB cable comes loose.
+
+  U2:
+    type: TI L293DNE, track motors
+    pins: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    pinlabels: ["1,2EN", 1A, 1Y, GND, GND, 2Y, 2A, VCC2, "3,4EN", 3A, 3Y, GND, GND, 4Y, 4A, VCC1]
+    notes: |
+      TI SLRS008D. VCC1 4.5-7 V, VCC2 from VCC1 to 36 V.
+      Inputs: VIH min 2.3 V, so 3.3 V logic works.
+      600 mA per channel. Pins 4, 5, 12, 13: ground and heat sink.
+      Bypass: C1 at VCC1, C2 at VCC2 (section 10).
+
+  U3:
+    type: TI L293DNE, linear actuator
+    pins: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    pinlabels: ["1,2EN", 1A, 1Y, GND, GND, 2Y, 2A, VCC2, "3,4EN", 3A, 3Y, GND, GND, 4Y, 4A, VCC1]
+    notes: |
+      Channels 3 and 4 unused: 3,4EN, 3A and 4A tied to GND,
+      3Y and 4Y not connected.
+      Bypass: C3 at VCC1, C4 at VCC2 (section 10).
+
+  C1:
+    type: Capacitor 0.1 uF, 50 V ceramic
+    subtype: U2 VCC1 bypass
+    pins: [1, 2]
+    notes: Solder at U2 pins 16 and 13
+
+  C2:
+    type: Capacitor 0.1 uF, 50 V ceramic
+    subtype: U2 VCC2 bypass
+    pins: [1, 2]
+    notes: Solder at U2 pins 8 and 5
+
+  C3:
+    type: Capacitor 0.1 uF, 50 V ceramic
+    subtype: U3 VCC1 bypass
+    pins: [1, 2]
+    notes: Solder at U3 pins 16 and 13
+
+  C4:
+    type: Capacitor 0.1 uF, 50 V ceramic
+    subtype: U3 VCC2 bypass
+    pins: [1, 2]
+    notes: Solder at U3 pins 8 and 5
+
+  J4:
+    type: DAGU DG01D motor, left track
+    pins: [1, 2]
+    pinlabels: [Lead A, Lead B]
+    notes: |
+      Swap the leads if the track runs backward.
+      Stall current not measured yet (D014).
+
+  J5:
+    type: DAGU DG01D motor, right track
+    pins: [1, 2]
+    pinlabels: [Lead A, Lead B]
+    notes: |
+      Swap the leads if the track runs backward.
+      Stall current not measured yet (D014).
+
+  J6:
+    type: Actuonix PQ12-100-12-P, 5-pin 1 mm flex cable
+    pins: [1, 2, 3, 4, 5]
+    pinlabels: [Pot - reference, Motor power, Motor power, Pot + reference, Pot wiper]
+    notes: |
+      Datasheet Rev D. Pot 5 kOhm +-50%, wiper between the
+      two references (0-3.3 V). Stall 210 mA at 12 V.
+      Max duty cycle 20%. Swap pins 2/3 to reverse.
+
+cables:
+  W20:
+    category: bundle
+    colors: [WH]
+    wirelabels: [D0 to R1]
+
+  W22:
+    category: bundle
+    colors: [OL, GN, GY, BN, TQ, LB, BK]
+    wirelabels: [ACT_IN2, LEFT_IN1, LEFT_IN2, RIGHT_IN1, RIGHT_IN2, ACT_IN1, GND]
+
+  W21:
+    category: bundle
+    colors: [WH, BK]
+    wirelabels: [MOTOR_ENABLE, GND]
+
+  W11:
+    category: bundle
+    colors: [WH, WH, GN, GY, BN, TQ, OG, PK, BK, BK, BK, BK]
+    wirelabels: [MOTOR_ENABLE, MOTOR_ENABLE, LEFT_IN1, LEFT_IN2, RIGHT_IN1, RIGHT_IN2,
+                 +5V_SERVO, VM_TRACK, GND, GND, GND, GND]
+
+  W12:
+    category: bundle
+    colors: [WH, LB, OL, OG, RD, BK, BK, BK, BK, BK, BK, BK]
+    wirelabels: [MOTOR_ENABLE, ACT_IN1, ACT_IN2, +5V_SERVO, +12V_ACT, GND, GND, GND, GND,
+                 "GND (3,4EN)", GND (3A), GND (4A)]
+
+  W30:
+    category: bundle
+    colors: [OG, BK]
+    wirelabels: [+5V_SERVO, GND]
+
+  W31:
+    category: bundle
+    colors: [PK, BK]
+    wirelabels: [VM_TRACK, GND]
+
+  W32:
+    category: bundle
+    colors: [OG, BK]
+    wirelabels: [+5V_SERVO, GND]
+
+  W33:
+    category: bundle
+    colors: [RD, BK]
+    wirelabels: [+12V_ACT, GND]
+
+  W13:
+    category: bundle
+    colors: [BUWH, BNWH]
+    wirelabels: [MOTOR_L_PLUS, MOTOR_L_MINUS]
+
+  W14:
+    category: bundle
+    colors: [BUWH, BNWH]
+    wirelabels: [MOTOR_R_PLUS, MOTOR_R_MINUS]
+
+  W15:
+    category: bundle
+    colors: [BK, BUWH, BNWH, RDWH, GNWH]
+    wirelabels: [GND, ACT_MOTOR_2, ACT_MOTOR_3, +3V3_LOGIC, ACT_FEEDBACK]
+
+connections:
+  # Enable network: D0 -> R1 -> MOTOR_ENABLE, R2 to GND
+  - - U1: [JP2-14]
+    - W20: [1]
+    - R1: [1]
+  - - R1: [2]
+    - W21: [1]
+    - R2: [1]
+  - - BUS_GND: [1]
+    - W21: [2]
+    - R2: [2]
+
+  # Pull-downs on the six driver inputs
+  - - U1: [JP2-15, JP2-7, JP2-6, JP2-5, JP2-4, JP2-3]
+    - W22: [1, 2, 3, 4, 5, 6]
+    - R4_R9: [1, 2, 3, 4, 5, 6]
+  - - BUS_GND: [1]
+    - W22: [7]
+    - R4_R9: [7]
+
+  # U2, track motor driver
+  - - R1: [2, 2]
+    - W11: [1, 2]
+    - U2: [1, 9]
+  - - U1: [JP2-7, JP2-6, JP2-5, JP2-4]
+    - W11: [3, 4, 5, 6]
+    - U2: [2, 7, 10, 15]
+  - - RAIL_5V_SERVO: [1]
+    - W11: [7]
+    - U2: [16]
+  - - RAIL_VM_TRACK: [1]
+    - W11: [8]
+    - U2: [8]
+  - - BUS_GND: [1, 1, 1, 1]
+    - W11: [9, 10, 11, 12]
+    - U2: [4, 5, 12, 13]
+
+  # U3, linear actuator driver
+  - - R1: [2]
+    - W12: [1]
+    - U3: [1]
+  - - U1: [JP2-3, JP2-15]
+    - W12: [2, 3]
+    - U3: [2, 7]
+  - - RAIL_5V_SERVO: [1]
+    - W12: [4]
+    - U3: [16]
+  - - RAIL_12V_ACT: [1]
+    - W12: [5]
+    - U3: [8]
+  - - BUS_GND: [1, 1, 1, 1, 1, 1, 1]
+    - W12: [6, 7, 8, 9, 10, 11, 12]
+    - U3: [4, 5, 12, 13, 9, 10, 15]
+
+  # Bypass capacitors, at the chip pins (TI SLRS008D section 10)
+  - - U2: [16, 13]
+    - W30: [1, 2]
+    - C1: [1, 2]
+  - - U2: [8, 5]
+    - W31: [1, 2]
+    - C2: [1, 2]
+  - - U3: [16, 13]
+    - W32: [1, 2]
+    - C3: [1, 2]
+  - - U3: [8, 5]
+    - W33: [1, 2]
+    - C4: [1, 2]
+
+  # Track motors
+  - - U2: [3, 6]
+    - W13: [1, 2]
+    - J4: [1, 2]
+  - - U2: [11, 14]
+    - W14: [1, 2]
+    - J5: [1, 2]
+
+  # Linear actuator: motor from U3, position pot on 3.3 V
+  - - BUS_GND: [1]
+    - W15: [1]
+    - J6: [1]
+  - - U3: [3, 6]
+    - W15: [2, 3]
+    - J6: [2, 3]
+  - - BUS_3V3: [1]
+    - W15: [4]
+    - J6: [4]
+  - - U1: [JP1-4]
+    - W15: [5]
+    - J6: [5]

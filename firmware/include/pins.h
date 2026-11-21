@@ -1,5 +1,6 @@
-// Pin map of M.A.T.S, from electronics/schematics.pdf (sheet 01: sensors, display and servos;
-// sheet 02: motor drivers). The schematic uses Arduino pin labels (D0..D13, A0..A7).
+// Pin map of M.A.T.S. The wiring sheets in electronics/wiring/ are the source of truth (D015):
+// 01_signals.yml (sensors, display, servos, IMU, encoders) and 02_drivers.yml (motor drivers).
+// The sheets use Arduino pin labels (D0..D13, A0..A7).
 //
 // platformio.ini defines BOARD_USES_HW_GPIO_NUMBERS, so the D*/A* constants of the core hold
 // GPIO numbers and no pin remapping happens, also not inside libraries. The static_asserts

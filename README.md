@@ -59,7 +59,7 @@ Both commands update `pyproject.toml` and `uv.lock`. Commit both files together.
 
 ## Firmware
 
-The firmware runs on the Arduino Nano ESP32 and is built with [PlatformIO](https://docs.platformio.org/), which `uv sync` installs into the project environment (D013). The pins come from `electronics/schematics.pdf` and are listed in `firmware/include/pins.h`.
+The firmware runs on the Arduino Nano ESP32 and is built with [PlatformIO](https://docs.platformio.org/), which `uv sync` installs into the project environment (D013). The pins and every wire are drawn in the WireViz sheets in `electronics/wiring/` (D015), and `firmware/include/pins.h` must match them. Render a sheet with `uv run wireviz -f s electronics/wiring/<sheet>.yml`, which needs Graphviz (`brew install graphviz`).
 
 **Step 1 (current): bench bring-up.** A serial console tests each part on its own. There is **no edge reflex yet**, so keep the tracks off the ground. The safety layer and the dump cycle come in step 2.
 
