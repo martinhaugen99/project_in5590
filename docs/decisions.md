@@ -11,7 +11,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted; bench supply superseded by D017 |
 | D006 | 2026-10-22 | Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks | Accepted; encoder coupling superseded by D018 |
 | D007 | 2026-10-22 | Edge sensing: two time-of-flight sensors, one ahead of each track | Accepted |
-| D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted |
+| D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted; bucket-arm gears superseded by D019 |
 | D009 | 2026-10-22 | Display and the seven states | Accepted |
 | D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Accepted |
 | D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
@@ -22,6 +22,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D016 | 2026-11-21 | Cut-off switch: SCI R13-66 rocker, bench supply current limit 2.5 A | Accepted; current limit superseded by D017 |
 | D017 | 2026-11-21 | Power source: 12 V wall adapter replaces the bench supply | Accepted |
 | D018 | 2026-11-21 | Encoder couplings printed in PLA instead of TPU | Accepted |
+| D019 | 2026-11-22 | Bucket-arm gears: 20-tooth servo gear and 10-tooth rod gear | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -293,7 +294,7 @@ Edge safety has the highest priority, and M.A.T.S drives to the edge on purpose 
 ## D008: Dump mechanism: servo-driven arms and a linear actuator
 
 - **Date:** 2026-10-22
-- **Status:** Accepted
+- **Status:** Accepted; the 1:1 bucket-arm gears are superseded by D019
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -692,6 +693,45 @@ Option 2: two PLA couplings, printed on the Creality Ender-3 V3 SE with 100 % in
 - The TPU encoder coupling in D006 is replaced. The rest of D006 still applies.
 - PLA is rigid, so the coupling does not take up an offset between the motor shaft and the encoder shaft. Any offset becomes side load on the encoder shaft, which takes at most 10 N (D006). The encoder mount and the motor mount must keep the shafts in line.
 - BOM item 19 and `print/print_params.md` already list PLA for the couplings.
+
+## D019: Bucket-arm gears: 20-tooth servo gear and 10-tooth rod gear
+
+- **Date:** 2026-11-22
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+D008 turns the bucket-arm rod with one SER0006 micro servo through a pair of 1:1 gears (option 1). It keeps two fallbacks for a weak servo: the larger lab servo (option 2), and a gear ratio of up to about 1.4:1 for more torque (option 3). The arms swing 118° (Deliverable 1, Figure 3), and the servo turns 180° ([DFRobot product page](https://www.dfrobot.com/product-255.html)).
+
+During the CAD work, a test showed that a small gear did not fit on the servo, so the servo gear had to be larger. With 1:1 gears, the rod gear would be just as large, and it would not fit inside the body. Martin changed the gears at that time, but the change was not recorded. The rod gear part `cad/bucket_arms/bucket_arms_gear_rod_reduced.SLDPRT` was added on 2026-11-13 (commit 7eb80b1).
+
+### Options
+
+1. 1:1 gears, with both gears as large as the servo gear must be. The rod gear does not fit inside the body.
+2. A gear ratio for more torque, such as 1.4:1 (D008 option 3). The rod gear is then larger than the servo gear, so it fits even less.
+3. A 20-tooth servo gear and a 10-tooth rod gear.
+
+### Choice
+
+Option 3:
+- Servo gear: 20 teeth, `cad/bucket_arms/bucket_arms_servo_gear.SLDPRT`.
+- Rod gear: 10 teeth, `cad/bucket_arms/bucket_arms_gear_rod_reduced.SLDPRT`.
+- Both are printed in PLA with 100 % infill (`print/print_params.md`).
+
+### Reasons
+
+- It is the only option where the servo gear fits on the servo and the rod gear fits inside the body.
+- The rod turns twice as far as the servo, so the 118° swing needs 59° of servo travel, well inside the 180° range.
+
+### Consequences
+
+- The rod gets at most half of the servo torque, and each degree of the servo moves the arms 2°. D008 option 3 is closed, because more torque through the gears needs a rod gear larger than the servo gear.
+- The bench torque test of the bucket servo (D008) matters more. Run it with the bucket, the ballast and a full load before the reach and tipping tests.
+- If the micro servo is too weak, the fallback is still the larger lab servo (D008 option 2). Check that it and a gear for it fit in the body.
+- A change in arm angle is twice the change in servo angle. The servo end positions are measured on the robot and stored as constants (`firmware/include/config.h`).
+- The gears could jump out of mesh in the first fit. A rod mount (`cad/bucket_arms/rod_mount.SLDPRT`, added 2026-11-18) now holds the rod next to its gear (`cad/README.md`).
+- Deliverable 1 (text and Figure 3) shows the 1:1 gears and stays as it was handed in. Project 2 describes the change as Iteration 1 in `docs/part_2/README.md`.
 
 ## Template
 
