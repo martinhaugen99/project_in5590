@@ -80,7 +80,7 @@ git lfs locks                                             # who has locked what
 
 ### Commands to lock and unlock
 
-```
+```bash
 git lfs lock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_arm/*.SLDASM bucket_arms/*.SLDPRT bucket_arms/*.SLDASM head/*.SLDPRT head/*.SLDASM purchased/*.SLDPRT track_drive/*.SLDPRT track_drive/*.SLDASM
 git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_arm/*.SLDASM bucket_arms/*.SLDPRT bucket_arms/*.SLDASM head/*.SLDPRT head/*.SLDASM purchased/*.SLDPRT track_drive/*.SLDPRT track_drive/*.SLDASM
 ```
