@@ -27,9 +27,6 @@ multirun/
 # print files
 *.STL
 
-# LaTeX build outputs for the poster (main.pdf is the deliverable and stays tracked)
-docs/part_2/poster/*.aux
-docs/part_2/poster/*.fdb_latexmk
-docs/part_2/poster/*.fls
-docs/part_2/poster/*.log
-docs/part_2/poster/*.synctex.gz
+# Raw video (CLAUDE.md: never commit raw video)
+*.mov
+*.MOV
