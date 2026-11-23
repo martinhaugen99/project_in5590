@@ -2,27 +2,35 @@
 
 Numbered record of project decisions (D001, D002, …). Each entry gives the context, the options, the choice and the reasons. To change a decision, add a new entry that supersedes the old one, and set the old entry's status to "Superseded by D###". Update `CLAUDE.md` whenever a decision changes the stack or the hardware.
 
+`docs/part_2/` (the Project 2 deliverable: README, assignment text and poster) was removed on 2026-11-23. Some entries below still cite it. The files are in git history at commit `5519f4a`.
+
 | ID | Date | Decision | Status |
 |---|---|---|---|
 | D001 | 2026-10-10 | Host-side Python tooling: uv, ruff, mypy, pytest, pre-commit | Accepted |
 | D002 | 2026-10-10 | Hydra 1.3 for experiment configuration | Accepted |
-| D003 | 2026-10-21 | Concept change: the M.A.T.S desk cleaner replaces the DeskPal desk companion | Accepted |
-| D004 | 2026-10-21 | Compute: one Arduino Nano ESP32 runs both layers | Accepted |
-| D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted; bench supply superseded by D017 |
+| D003 | 2026-10-21 | Concept change: the M.A.T.S desk cleaner replaces the DeskPal desk companion | Accepted; optimization task superseded by D022 |
+| D004 | 2026-10-21 | Compute: one Arduino Nano ESP32 runs both layers | Accepted; microcontroller and two-core split superseded by D020 |
+| D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted; bench supply superseded by D017, encoder pull-up level by D020, edge-sensor supply by D021 |
 | D006 | 2026-10-22 | Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks | Accepted; encoder coupling superseded by D018 |
 | D007 | 2026-10-22 | Edge sensing: two time-of-flight sensors, one ahead of each track | Accepted |
 | D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted; bucket-arm gears superseded by D019 |
-| D009 | 2026-10-22 | Display and the seven states | Accepted |
-| D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Accepted |
+| D009 | 2026-10-22 | Display and the seven states | Accepted; IMU trigger for Surprised superseded by D020 |
+| D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Superseded by D020 (IMU dropped for the demo) |
 | D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
 | D012 | 2026-10-24 | CAD: module owners and a table of shared dimensions | Accepted |
-| D013 | 2026-11-19 | Firmware toolchain: PlatformIO through uv, Arduino-ESP32 core 3.3.12 | Accepted |
-| D014 | 2026-11-20 | Step-down converters: LM2596 for the motors, Mateksys BEC12S-PRO for the servos | Accepted |
-| D015 | 2026-11-20 | Wiring diagrams in WireViz are the source of truth for pins and wiring | Accepted |
-| D016 | 2026-11-21 | Cut-off switch: SCI R13-66 rocker, bench supply current limit 2.5 A | Accepted; current limit superseded by D017 |
+| D013 | 2026-11-19 | Firmware toolchain: PlatformIO through uv, Arduino-ESP32 core 3.3.12 | Accepted; platform, core and pin numbering superseded by D020 |
+| D014 | 2026-11-20 | Step-down converters: LM2596 for the motors, Mateksys BEC12S-PRO for the servos | Accepted; LM2596 use and motor supply superseded by D021 |
+| D015 | 2026-11-20 | Wiring diagrams in WireViz are the source of truth for pins and wiring | Accepted; display supply pin superseded by D020 |
+| D016 | 2026-11-21 | Cut-off switch: SCI R13-66 rocker, bench supply current limit 2.5 A | Accepted; current limit superseded by D017, worst-case estimate by D021 |
 | D017 | 2026-11-21 | Power source: 12 V wall adapter replaces the bench supply | Accepted |
 | D018 | 2026-11-21 | Encoder couplings printed in PLA instead of TPU | Accepted |
 | D019 | 2026-11-22 | Bucket-arm gears: 20-tooth servo gear and 10-tooth rod gear | Accepted |
+| D020 | 2026-11-22 | Microcontroller: Arduino Leonardo replaces the Arduino Nano ESP32 | Accepted |
+| D021 | 2026-11-22 | Power rails: track motors on the BEC 5.2 V rail, LM2596 at 3.3 V for the edge sensors | Accepted |
+| D022 | 2026-11-22 | Optimization task: squaring up to the table edge replaces the collection rate | Accepted; measure and controller superseded by D025 |
+| D023 | 2026-11-22 | Firmware step 2: edge gate, interlocks and the edge approach | Accepted; handling of a hung loop superseded by D024 |
+| D024 | 2026-11-22 | Motor watchdog in a timer interrupt and one-try edge-sensor reads | Accepted |
+| D025 | 2026-11-22 | Optimization task: how far the brush stops past the table edge | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -117,7 +125,7 @@ The HUSKYLENS runs its own detection model, so no model is trained on the laptop
 ## D003: Concept change from desk companion to desk cleaner
 
 - **Date:** 2026-10-21
-- **Status:** Accepted
+- **Status:** Accepted; the optimization task is superseded by D022 (squaring up to the table edge)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -157,7 +165,7 @@ Option 2: **M.A.T.S** (Mechanized Assistant for Tabletop Sanitation).
 ## D004: Compute: one Arduino Nano ESP32
 
 - **Date:** 2026-10-21
-- **Status:** Accepted
+- **Status:** Accepted; the microcontroller and the two-core split are superseded by D020 (Arduino Leonardo)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -193,7 +201,7 @@ Option 2: [Arduino Nano ESP32](https://store.arduino.cc/products/nano-esp32) (ES
 ## D005: Power: 12 V bench supply and laptop USB
 
 - **Date:** 2026-10-21
-- **Status:** Accepted; the bench supply is superseded by D017 (12 V wall adapter)
+- **Status:** Accepted; the bench supply is superseded by D017 (12 V wall adapter), the encoder pull-up level by D020 (5 V), and the edge-sensor supply by D021 (LM2596 at 3.3 V)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -331,7 +339,7 @@ For the bucket arms:
 ## D009: Display and the seven states
 
 - **Date:** 2026-10-22
-- **Status:** Accepted
+- **Status:** Accepted; the IMU trigger for Surprised is superseded by D020 (IMU dropped)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -364,7 +372,7 @@ The face is the main way the robot shows its state (topic C: animatronics). The 
 ## D010: IMU: SparkFun OpenLog Artemis
 
 - **Date:** 2026-10-22
-- **Status:** Accepted
+- **Status:** Superseded by D020 (the IMU is dropped for the demo)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -467,7 +475,7 @@ Option 3:
 ## D013: Firmware toolchain
 
 - **Date:** 2026-11-19
-- **Status:** Accepted
+- **Status:** Accepted; the platform, the core and the pin numbering are superseded by D020 (Arduino Leonardo)
 - **Decided by:** Martin
 
 ### Context
@@ -517,7 +525,7 @@ The firmware for the Arduino Nano ESP32 (D004) had no toolchain yet. Project 2 i
 ## D014: Step-down converters: LM2596 for the motors, Mateksys BEC12S-PRO for the servos
 
 - **Date:** 2026-11-20
-- **Status:** Accepted
+- **Status:** Accepted; the LM2596 use and the track motor supply are superseded by D021
 - **Decided by:** Martin
 
 ### Context
@@ -552,7 +560,7 @@ Option 1:
 ## D015: Wiring diagrams in WireViz are the source of truth for pins and wiring
 
 - **Date:** 2026-11-20
-- **Status:** Accepted
+- **Status:** Accepted; the display supply pin (Nano VBUS) is superseded by D020
 - **Decided by:** Martin
 
 ### Context
@@ -587,7 +595,7 @@ Option 2:
 ## D016: Cut-off switch: SCI R13-66 rocker, bench supply current limit 2.5 A
 
 - **Date:** 2026-11-21
-- **Status:** Accepted; the 2.5 A current limit is superseded by D017 (the wall adapter has no adjustable limit)
+- **Status:** Accepted; the 2.5 A current limit is superseded by D017 (the wall adapter has no adjustable limit), and the worst-case estimate by D021
 - **Decided by:** Martin
 
 ### Context
@@ -732,6 +740,440 @@ Option 3:
 - A change in arm angle is twice the change in servo angle. The servo end positions are measured on the robot and stored as constants (`firmware/include/config.h`).
 - The gears could jump out of mesh in the first fit. A rod mount (`cad/bucket_arms/rod_mount.SLDPRT`, added 2026-11-18) now holds the rod next to its gear (`cad/README.md`).
 - Deliverable 1 (text and Figure 3) shows the 1:1 gears and stays as it was handed in. Project 2 describes the change as Iteration 1 in `docs/part_2/README.md`.
+
+## D020: Microcontroller: Arduino Leonardo replaces the Arduino Nano ESP32
+
+- **Date:** 2026-11-22
+- **Status:** Accepted
+- **Decided by:** Martin and Yuki
+
+### Context
+
+D004 put both control layers on the two cores of an Arduino Nano ESP32. Its pin map used all 22 pins (D0–D13 and A0–A7). When we wired the robot, the Nano did not have enough GPIO pins for our needs, and the wires on its pins made a weak connection (`docs/part_2/README.md`, Iteration 5). Yuki made a new pin map for an Arduino Leonardo from the lab (BOM item 1).
+
+The Leonardo is built around an ATmega32U4 with 5 V logic and one core at 16 MHz:
+- Sketches get 28,672 bytes of flash and 2,560 bytes of RAM (`leonardo.upload.maximum_size` and `maximum_data_size` in [ArduinoCore-avr boards.txt](https://github.com/arduino/ArduinoCore-avr/blob/master/boards.txt)).
+- The 3V3 pin gives at most 50 mA, and each I/O pin at most 20 mA ([A000057 full pinout](https://docs.arduino.cc/resources/pinouts/A000057-full-pinout.pdf)).
+- Hardware SPI is only on the ICSP header: pin 1 CIPO, 3 SCK, 4 COPI (A000057 full pinout).
+- The ATmega32U4 reads 3.3 V as high. Its VIH minimum is 0.2 VCC + 0.9 V, which is 1.9 V at 5 V ([ATmega32U4 datasheet](https://ww1.microchip.com/downloads/en/devicedoc/atmel-7766-8-bit-avr-atmega16u4-32u4_datasheet.pdf) 7766J, table 29-1).
+
+The edge sensors and the display are 3.3 V parts:
+- **VL53L4CD:** AVDD 2.6–3.5 V. SCL, SDA, XSHUT and GPIO1 take at most 3.6 V (DS13812 Rev 8, tables 11 and 12, `electronics/DS_vl53l4cd.pdf`).
+- **SATEL-VL53L4CD board:** it has no regulator and no level shifter. VDD goes straight to the sensor, and the 10 kΩ pull-ups on XSHUT and GPIO1 and the 2.2 kΩ I2C pull-ups (R1 to SDA through solder bridge SB1/SB2, R2 to SCL through SB3/SB4) all go to VDD ([DB4629](https://docs.rs-online.com/762a/A700000008746312.pdf), figure 5).
+- **MSP2807 display:** "Logic IO port voltage 3.3V(TTL)" ([LCDwiki](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807)).
+  - The module schematic connects CS, RESET, DC, SDI and SCK straight to the panel. Its XC6206 regulates only VCC.
+  - LCDwiki's Arduino page says the pins "can only input a 3.3V high level" and recommends an external level shifter ([Run Arduino Demo in SPI model](https://www.lcdwiki.com/Run_Arduino_Demo_in_spi_model)).
+
+### Options
+
+1. Keep the Nano ESP32.
+2. The Arduino Leonardo from the lab, with Yuki's pin map.
+
+### Choice
+
+Option 2. The pin map:
+
+| Leonardo pin | Net | Connects to | Note |
+|---|---|---|---|
+| D0 | ENC_L_A | J12 phase A | INT2. Also Serial1 RX |
+| D1 | ENC_R_A | J13 phase A | INT3. Also Serial1 TX |
+| D2 | SDA | J7, J8 SDA | Hardware I2C |
+| D3 | SCL | J7, J8 SCL | Hardware I2C |
+| D4 | TOF_R_XSHUT | J8 XSHUT | Open-drain. Swapped, see below |
+| D5 | TOF_L_XSHUT | J7 XSHUT | Open-drain. Swapped, see below |
+| D6 | LEFT_IN1 | U2 pin 2 (1A) | PWM, Timer4 |
+| D7 | LEFT_IN2 | U2 pin 7 (2A) | No PWM |
+| D8 | ACT_IN1 | U3 pin 2 (1A) | No PWM |
+| D9 | RIGHT_IN2 | U2 pin 15 (4A) | Timer1, taken by the Servo library |
+| D10 | ACT_IN2 | U3 pin 7 (2A) | Timer1, taken by the Servo library |
+| D11 | RIGHT_IN1 | U2 pin 10 (3A) | PWM, Timer0 |
+| D12 | MOTOR_ENABLE | R1, then U2 pins 1 and 9, U3 pin 1 | |
+| D13 | – | Built-in LED | Free |
+| A0 | ACT_FEEDBACK | J6 pin 5 (pot wiper) | |
+| A1 | BUTTON_ADC | Button ladder | |
+| A2 | TFT_DC | J9 DC/RS, through a divider | |
+| A3 | TFT_CS | J9 CS, through a divider | |
+| A4 | BRUSH_SERVO_PWM | J10 signal | |
+| A5 | BUCKET_SERVO_PWM | J11 signal | |
+| ICSP-4 (COPI) | TFT_MOSI | J9 SDI/MOSI, through a divider | Hardware SPI |
+| ICSP-3 (SCK) | TFT_SCK | J9 SCK, through a divider | Hardware SPI |
+| ICSP-1 (CIPO) | – | Not connected | Free |
+
+Sources for the pin functions:
+- Interrupts and PWM pins: A000057 full pinout.
+- The timer of each PWM pin: `digital_pin_to_timer_PGM` in [pins_arduino.h (leonardo)](https://github.com/arduino/ArduinoCore-avr/blob/master/variants/leonardo/pins_arduino.h).
+- The Servo library uses Timer1 on the ATmega32U4 ([ServoTimers.h](https://github.com/arduino-libraries/Servo/blob/master/src/avr/ServoTimers.h)) and puts it in normal counting mode (`TCCR1A = 0` in [Servo.cpp](https://github.com/arduino-libraries/Servo/blob/master/src/avr/Servo.cpp)). D9 and D10 then have no PWM.
+
+Yuki's list names the right-motor inputs IN3 (D11) and IN4 (D9), after the L293D channels. The net names stay RIGHT_IN1 and RIGHT_IN2, as on the wiring sheets.
+
+XSHUT (updated 2026-11-23): the first version of this table had D4 on the left sensor and D5 on the right. The robot is wired the other way, found on the bench on 2026-11-22. The table, wiring sheet 01 and `firmware/include/pins.h` follow the robot.
+
+Rules for the 3.3 V parts and other changes:
+- **Display:**
+  - CS, DC, MOSI and SCK each get a resistor divider: 1 kΩ in series and 2 kΩ to GND (R10–R17, wiring sheet 01).
+  - The ILI9341 accepts a high level from 0.7 VDDI to VDDI, and at most VDDI + 0.3 V (ILI9341 V1.09, section 18). With VDDI = 3.3 V:
+    - At 5.0 V the divider gives 3.33 V. That is inside the absolute maximum, but 0.03 V above the recommended high level.
+    - At the 32U4 VOH minimum of 4.2 V it gives 2.8 V, which is still above the 2.31 V needed.
+  - RESET keeps its 10 kΩ pull-up (R3), now to the Leonardo 3V3 pin. The LED input also takes 3.3 V from that pin.
+  - VCC comes from the Leonardo 5V pin, with J1 open.
+- **XSHUT:** the firmware drives it open-drain.
+  - Shutdown: output low. Release: input with the port bit low, so the board's 10 kΩ pull-up raises it to 3.3 V.
+  - The library drives XSHUT as a push-pull output (`pinMode(xshut, OUTPUT)` and `digitalWrite(xshut, HIGH)` in `vl53l4cd_class.h`, STM32duino VL53L4CD 1.0.5), so the firmware does not give it the XSHUT pin.
+  - On AVR, an input with its port bit high has the internal pull-up on (the `INPUT_PULLUP` branch of `pinMode()` in [wiring_digital.c](https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/wiring_digital.c)), so the port bit must stay low.
+- **I2C:** `twi_init()` turns on the internal pull-ups to 5 V ([twi.c](https://github.com/arduino/ArduinoCore-avr/blob/master/libraries/Wire/src/utility/twi.c)). The firmware turns them off after `Wire.begin()`, so only the 2.2 kΩ pull-ups to 3.3 V on the sensor boards remain.
+- **Edge-sensor supply:** 3.3 V from the LM2596 (D021). The two sensors draw 2 × 24 mA on average while ranging, with peaks up to 40 mA each (DS13812 table 14). That is above the 50 mA of the Leonardo 3V3 pin.
+- **Actuator pot:** its reference rail (J6 pin 4) moves from 3.3 V to the Leonardo 5V pin.
+  - The PQ12 takes "any stable low and high reference voltage" on pins 1 and 4 ([PQ12 datasheet](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf)).
+  - The ADC references AVCC, so the reading covers the full range.
+- **Encoders:** the internal pull-up holds phase A at 5 V (20–50 kΩ, ATmega32U4 datasheet table 29-1).
+- **IMU: dropped for the demo.**
+  - Its serial input would be Serial1 RX on D0, which now reads the left encoder.
+  - Surprised is shown when both edge sensors see no surface at once.
+- **Control:** both layers run in one fixed-rate loop on the single core.
+
+### Reasons
+
+- The map fits every part except the IMU. It uses 22 of the 23 signal pins (D0–D13, A0–A5 and three pins on the ICSP header), so D13 and ICSP-1 are free.
+- The hardware SPI sits on the ICSP header, so the display takes no SPI pins from the side headers.
+- It is lab equipment.
+
+### Consequences
+
+- **D004:** the microcontroller and the two-core split are replaced. One processor remains, so there is still no inter-board protocol.
+- **D009 and D010:** the IMU is dropped (D010 superseded), and Surprised uses the edge sensors only. BOM item 9 has the status `optional`.
+- **D013:** the ESP32 platform, the core and the GPIO pin numbering are replaced. The AVR platform version is chosen and pinned in the firmware port.
+- **D015:** the display VCC moves from Nano VBUS to the Leonardo 5V pin.
+- **Firmware port (separate task).** Until it is done, `firmware/include/pins.h` and `firmware/platformio.ini` still describe the Nano ESP32 and do not match the wiring sheets. Do not flash the robot until then. The checklist:
+  - `platformio.ini`: platform `atmelavr` at an exact version, board `leonardo`, the ESP32 flags removed.
+  - `pins.h`: the new map, with `static_assert` checks against the Leonardo variant numbers (A0–A5 are D18–D23).
+  - Tracks: PWM on D6 (left) and D11 (right) only. Reverse is IN2 high and IN1 at PWM (1 − duty). Timer4 and Timer0 start at different PWM frequencies.
+  - Tracks: read the 32-bit encoder counts with interrupts off, and remove `IRAM_ATTR`.
+  - Servos: the Arduino Servo library, pinned in `platformio.ini`.
+  - Actuator: `digitalWrite` on D8 and D10, and `analogRead` instead of `analogReadMilliVolts`.
+  - Edge sensors: XSHUT open-drain in our own code, and the I2C pull-ups off.
+  - Display: default SPI pins.
+  - Display drawing: a full screen is 240 × 320 × 16 bits, and the fastest SPI clock is fosc/2 = 8 MHz (ATmega32U4 datasheet, table 17-5). So it takes at least 154 ms, and the edge check would wait that long. Draw the face in small pieces between loop passes.
+  - Console: the AVR core has no `Serial.printf`.
+  - Remove `imu_link`.
+  - Check the flash and RAM use that `pio run` prints against 28,672 and 2,560 bytes.
+- **Bench checklist:**
+  - The check that the motors stay off through reset now measures D12. The port pins are tri-stated during reset (ATmega32U4 datasheet, section 10.2.1), so R2 holds MOTOR_ENABLE low.
+  - The D0/D1 boot UART note of the ESP32-S3 no longer applies.
+- **Open items:**
+  - I2C pull-ups: in Martin's photo of 2026-11-22, one board has 0 Ω links fitted at SB1 and SB3, so R1 and R2 connect to SDA and SCL. To confirm on both boards with the power off, measure about 2.2 kΩ from VDD to SDA and from VDD to SCL. With both boards on the bus, each line has 1.1 kΩ to 3.3 V, so a low level sinks 3 mA. The VL53L4CD VOL is specified at 4 mA (DS13812 table 15).
+  - Were the display or the sensors powered while wired straight to the Leonardo? If so, test them for damage.
+  - Which resistor values does the lab have for the dividers?
+- `CLAUDE.md`, BOM items 1, 8 and 9, the wiring sheets and `.claude/skills/wiring-diagram/SKILL.md` name the Leonardo.
+
+## D021: Power rails: track motors on the BEC 5.2 V rail, LM2596 at 3.3 V for the edge sensors
+
+- **Date:** 2026-11-22
+- **Status:** Accepted
+- **Decided by:** Martin and Yuki
+
+### Context
+
+- D014 feeds the track motors from the LM2596, set for about 4.5 V at the motors, and the servos from the BEC12S-PRO at 5.2 V.
+- With the Leonardo (D020), the edge sensors need a 3.3 V supply that gives more than the 50 mA of the Leonardo 3V3 pin.
+- The team ran the track motors on 5 V through the L293D, and they worked (reported on 2026-11-22).
+
+### Options
+
+1. Keep D014, and add a new 3.3 V regulator for the edge sensors.
+2. Feed the track motors from the BEC 5.2 V rail, and set the LM2596 to 3.3 V for the edge sensors.
+
+### Choice
+
+Option 2:
+- **Track motors:** U2 VCC2 takes +5V_SERVO, the BEC output. That rail already feeds the servos and VCC1 of both L293D chips. VM_TRACK is removed.
+- **LM2596:** set to 3.3 V, PS2 on wiring sheet 03.
+  - Its input is +12V_UNSWITCHED, before the cut-off switch, like the encoders.
+  - Its output, +3V3_TOF, feeds only VDD of both edge sensors.
+- **Leonardo 3V3 pin (+3V3_LOGIC):** keeps the small display loads (D020).
+- The two 3.3 V nets are never joined.
+
+### Reasons
+
+- No new part is needed.
+- The L293D allows VCC2 from VCC1 to 36 V ([TI SLRS008D](https://www.ti.com/lit/ds/symlink/l293d.pdf)), so VCC2 = VCC1 = 5.2 V is allowed.
+- 3.3 V is inside the 2.6–3.5 V supply range of the VL53L4CD (DS13812 table 12). 12 V is more than 1.5 V above the LM2596 output (HTC LM2596 datasheet).
+- Before the cut-off switch, the edge sensors stay powered when the switch cuts the motors. The firmware does not have to restart them, and the robot keeps seeing the edge.
+- The BEC gives 5 A continuously. The worst case with every load stalled at once, in the format of D016:
+
+| Load | Power | Source |
+|---|---|---|
+| 2 servos | 2 × 1 A × 5.2 V = 10.4 W | Stall current at 6 V ([DFRobot](https://www.dfrobot.com/product-255.html)) |
+| 2 track motors | 2 × 0.6 A × 5.2 V ≈ 6.2 W | 600 mA continuous per L293D channel (TI SLRS008D 6.1) |
+| Logic of both L293D chips | 2 × 60 mA × 5.2 V ≈ 0.6 W | ICC1 max (TI SLRS008D 6.5) |
+| **BEC output** | **3.32 A, about 17.3 W; at 88 % efficiency about 19.6 W from 12 V** | Efficiency 88–96 % (Matek BEC12S-PRO manual) |
+| Linear actuator | 0.21 A × 12 V ≈ 2.5 W | Stall current at 12 V ([Actuonix PQ12](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf)) |
+| **Total through SW1** | **≈ 22 W, about 1.8 A at 12 V** | |
+| Edge sensors through the LM2596, before SW1 | 2 × 40 mA × 3.3 V ≈ 0.26 W at the output | Peak current (DS13812 table 14). The HTC datasheet gives no efficiency at this light load |
+
+The motor line still uses the L293D limit, because the DG01D stall current is not measured yet (D014).
+
+### Consequences
+
+- **D014:** the LM2596 no longer feeds the motors. Its notes about setting it at the motor terminals no longer apply. The BEC part of D014 stands.
+- **D016:** the worst-case current through SW1 drops from about 2.2 A to about 1.8 A, so the switch and the adapter keep more margin.
+- **Set the LM2596 to 3.3 V and measure its output before the edge sensors are connected.** It was set for the motors, above 5.2 V (sheet 03), and that would destroy the sensors (3.6 V absolute maximum, DS13812 table 11).
+- **Motor speed:** the motors get 5.2 V minus the L293D drop. That is less than their suggested 4.5 V at high current (about 2.6 V drop at 0.6 A, D016). Measure the top speed and the stopping distance in the edge tests.
+- **Shared rail:** motors and servos now share the BEC rail. Motor starts and stalls can pull the rail down and make the servos twitch. Measure the rail during the first powered tests, together with the motor stall current (D014).
+- **Power order: USB in first, and the 12 V adapter out first.** The edge sensors stay powered when only the USB cable is unplugged. Their pull-ups (2.2 kΩ on SDA and SCL, 10 kΩ on XSHUT) then drive current into the pins of the unpowered ATmega32U4, above its VCC + 0.5 V limit (datasheet 7766J, section 29.1).
+- `CLAUDE.md`, BOM items 12 and 13, and wiring sheets 01–03 name the new rails.
+
+## D022: Optimization task: squaring up to the table edge replaces the collection rate
+
+- **Date:** 2026-11-22
+- **Status:** Accepted; the measure and the controller are superseded by D025
+- **Decided by:** Martin and Yuki
+
+### Context
+
+D003 made the collection rate the optimization task: the share of a weighed amount of spread debris, by mass, that ends up in the bucket. The target was at least 80 % by mass (`CLAUDE.md`, Should). Measuring it needs the full dump cycle to work: lower the brush, drive to the edge, square up, lower the bucket, push, stow and back away.
+
+The switch to the Arduino Leonardo (D020) set the firmware back. The pin map, the power rails (D021) and the firmware all had to change, and the bench firmware had to be ported before any part of the dump cycle could run. The bench firmware for the Leonardo was finished on 2026-11-22, and the dump cycle is not written yet. Part 2 asks us to optimize the controller for a certain task (`docs/part_2/ASSIGNMENT.md`, section 1), and the demo is on 30 November.
+
+### Options
+
+1. Keep the collection rate (D003). It needs the full dump cycle to work reliably, and many runs with weighed debris.
+2. Squaring up to the table edge: the robot drives to the edge at an angle and ends square to it. It is the first part of every dump cycle, and the Part 2 GIF shows it.
+3. Stopping distance at the edge versus speed. It is already planned as a safety measurement (D003), and it leaves little to tune beyond the speed.
+
+### Choice
+
+Option 2: we tune the approach duty of the tracks for squaring up to the table edge.
+- **Measured in each run:**
+  - the gap between the front of each track and the table edge, measured with a ruler
+  - the final angle to the edge, from the difference between the two gaps
+  - the time from the start until both tracks have stopped
+- **Tuned:** the approach duty, within the speed cap in the firmware. Each duty is tested from several approach angles, with several runs each.
+- **Pass:** both gaps stay above zero in every run. Among the duties that pass, the best one gives the smallest final angle, and the shorter time breaks a tie.
+
+### Reasons
+
+- It needs only the first part of the dump cycle, which step 2 of the firmware builds (`README.md`, Firmware). It fits in the time left before the demo.
+- Every dump cycle starts with it. D007 already asks the edge sensors to guide the approach so that the robot ends square to the edge.
+- It can be measured with a ruler and the serial console. It needs no weighing and no test debris.
+- It has a clear reality gap. In CAD, each sensor point is 63.25 mm ahead of the front of its track, and the robot turns about the middle of the stopped track. On the real robot:
+  - The brush-arm mount is off center, so the two sensor points are not the same distance ahead of the tracks (`docs/part_2/README.md`, section 6).
+  - Each sensor sees a cone, not a line: the detection volume is 22° at 100 mm ([VL53L4CD datasheet DS13812](https://www.st.com/resource/en/datasheet/vl53l4cd.pdf), field of view). The stop can come later than the point straight below the sensor.
+  - The tracks slip, so the turn point moves.
+- We prefer to report a smaller task that we can finish and measure over a larger one that we cannot finish before the demo.
+
+### Consequences
+
+- **D003:** the collection rate is no longer the optimization task. It becomes future work.
+- **`CLAUDE.md`:** the Should goals, the MVP note and the list of experiments name the new task. The collection rate moves to the Could goals.
+- **Firmware, step 2:**
+  - A console command sets the approach duty without reflashing, limited by the speed cap.
+  - Each run prints one result line: the time, the encoder counts and which side stopped first.
+  - The edge stop and the dump interlock apply in every run. The optimization never overrides them (`CLAUDE.md`, priority order).
+- **Experiments:**
+  - `docs/experiments/001-edge-calibration.md` comes first. The edge threshold and the stopping distance set the safe range of duties.
+  - `docs/experiments/002-square-up.md` holds the setup, the raw data and the result of the optimization.
+- **Final angle:** angle = atan((gap_left − gap_right) / b), where b is the distance between the two points where the gaps are measured.
+- **Mount offset:** until the brush-arm mount is fixed, part of the final angle comes from the mount and not from the controller. Measure how far each sensor point sits ahead of its track on the real robot before the runs, so this offset can be separated from the result.
+- **Part 2 README and poster:** section 1 and the poster describe the new task, its results and the limits that the switch to the Leonardo put on it. Section 6 names the collection rate as future work.
+
+## D023: Firmware step 2: edge gate, interlocks and the edge approach
+
+- **Date:** 2026-11-22
+- **Status:** Accepted; the handling of a hung loop is superseded by D024 (motor watchdog and one-try sensor reads)
+- **Decided by:** Martin
+
+### Context
+
+Step 1 of the Leonardo firmware is a bench console with no edge reflex (`README.md`, Firmware). The optimization task (D022) and the Part 2 GIF need the robot to drive to a table edge and square up to it. The GIF shows only the approach and the square-up, with the brush down and its servo off. `CLAUDE.md` asks the low level for:
+- an edge check in every loop iteration, before any motor command is applied
+- a stop on invalid sensor readings, and when commands stop arriving
+- a speed cap in the firmware
+- forward motion of a track only while the sensor ahead of it sees the table
+- reverse only along the path just driven, never farther than the encoders measured
+- the dump interlock
+
+Measured on the robot on 2026-11-22:
+- `tof` with the brush down and its servo off: about 50 mm on the table, and more than 100 mm past the edge.
+- The slowest duty that moves the robot reliably on the table with the brush down: 50 %.
+- The direction flags in `firmware/include/config.h` are correct.
+- From CAD: each sensor point (where the axis of the sensor meets the table) is 63.25 mm ahead of the front of its track. The track is 130.92 mm long, so the point is 128.71 mm ahead of the middle of the track.
+
+On the ATmega32U4, the Caterina bootloader and the 1200-baud reset of the core both use the watchdog timer. Reports say that a sketch that turns the watchdog on can block USB uploads ([Arduino forum](https://forum.arduino.cc/t/atmega32u4-bootloader/386871), [arduino/Arduino#4492](https://github.com/arduino/Arduino/issues/4492)).
+
+### Options
+
+**Stop when commands stop arriving:**
+1. The hardware watchdog (WDT), which resets the board when the loop stops.
+2. A command lease and timeouts in software: every track command runs for a limited time, and the edge approach must renew it in every tick.
+
+**Reverse:**
+1. Allow reverse up to the encoder counts driven forward.
+2. Refuse reverse in step 2.
+
+### Choice
+
+Option 2 in both cases. The firmware works like this:
+
+- **Control tick:** every 5 ms (`LOOP_PERIOD_MS`, matching the sensor poll period), in this order: edge sensors, edge approach, track gate and timers, actuator timer. The console runs in every pass of the loop, and its commands go through the same checks.
+- **Safety checks** (`firmware/src/safety.{h,cpp}`). The track, servo and actuator modules call them before they apply a command:
+  - **Sees the table:** the sensor is running, its last reading is at most 150 ms old (`EDGE_STALE_MS`, three timing budgets), the range status is 0, and the distance is at most 75 mm (`EDGE_TABLE_MAX_MM`). Every other case counts as "no table".
+  - **Edge gate:** `tracks::run()` refuses forward duty on a track whose sensor does not see the table, and `tracks::update()` stops a running track as soon as its sensor stops seeing it.
+  - **Speed cap:** every track command is limited to ±70 % (`TRACK_MAX_DUTY_PCT`).
+  - **Reverse:** refused.
+  - **Bucket interlock:** the tracks are locked while the bucket servo gets pulses. The bucket servo gets pulses only while both tracks are stopped and neither sensor sees the table.
+  - **Actuator interlock:** the tracks are locked while the actuator moves, and the actuator moves only while both tracks are stopped.
+- **Edge approach** (`firmware/src/edge_approach.{h,cpp}`), started with `approach [duty]`. The default duty is 50 % (`APPROACH_DEFAULT_DUTY_PCT`).
+  1. The display shows "Working", then the approach waits for a fresh reading from each sensor.
+  2. Both tracks drive forward. Each track stops for the rest of the run when its sensor stops seeing the table, so the robot turns about the first track that stops.
+  3. The run ends when both tracks have stopped. It aborts on the first of these:
+     - 8 s from the start (`APPROACH_MAX_MS`)
+     - 3 s after the first track stopped (`SQUARE_MAX_MS`)
+     - a sensor that stops delivering readings
+     - the interlock
+     - `stop` or `en 0`
+  4. The approach renews each track command with a run time of 50 ms (`TRACK_LEASE_MS`) in every tick.
+  5. At the end, the console prints `result,<outcome>,<duty_pct>,<first_side>,<t_first_ms>,<t_total_ms>,<enc_l>,<enc_r>`, and the display shows "Happy" (done), "Scared" (aborted) or "Neutral" (stopped).
+- **The shared states:** `firmware/include/emotion.h` holds the seven states of D009. Step 2 draws three of them as text.
+
+### Reasons
+
+- **The gate sits in the track module,** so every caller passes through it, and the console cannot drive around it.
+- **The threshold is halfway** between the two measured values, 25 mm from each.
+- **Three timing budgets** let one late result pass without a stop, while a sensor that stops delivering stops the robot within 150 ms.
+- **A sensor fault aborts the run** instead of counting as an edge. A fault also reads as "no table", and counting it as an edge would give a false "done".
+- **Reverse:** there are no rear sensors, and the rule "only along the path just driven" belongs to the back-away step, which is not written yet. The optimization runs do not need reverse, since the robot is put back by hand.
+- **No hardware watchdog:** it can block USB uploads on this board (Context). The lease stops the tracks when the edge approach stops renewing its commands.
+- **The display draws only while the tracks are stopped.** A full-screen draw blocks the loop for at least 154 ms (D020), and the robot would drive without an edge check in that time.
+
+### Consequences
+
+- **Reaction time:** a new reading arrives about every 50 ms (`TOF_TIMING_BUDGET_MS`), and the tick adds up to 5 ms. The track then still has to stop. Experiment 001 measures the resulting gap at the edge.
+- **Margin:** of the 63.25 mm, the square-up turn uses d·(1 − cos α), with d = 128.71 mm. That is 7.8 mm at an approach angle of 20°. The rest must cover the stopping distance and the late trigger caused by the cone of the sensor (D022).
+- **A loop that hangs is not caught in software.** The I2C timeout and the address probe in `edge_sensors.cpp` keep the sensor bus from hanging it. The cut-off switch and the pull-downs on the driver inputs remain.
+- **Brush position:** the threshold holds for the brush down with its servo off. With the brush raised, the sensors tilt (`docs/part_2/README.md`, section 6). That case is not tested.
+- **Interlocks use what is measured.**
+  - The bucket check uses "pulses or none", because the stowed pulse is not measured.
+  - The actuator check cannot tell whether the brush is back, because the feedback value at the retracted end is not measured. Retract the actuator fully before a run.
+- **Flash:** step 2 uses 28,410 of 28,672 bytes, so 262 bytes are left. RAM: 1,047 of 2,560 bytes. The rest of the dump cycle needs space to be freed first, for example by removing the display test pattern or shortening console text.
+- **Bench tests now need a surface** within 75 mm under both sensors, or the gate refuses forward commands.
+- **D020:** the firmware port is done (step 1, 2026-11-22), so the note not to flash the robot no longer applies.
+- **Next:** `README.md` describes the commands and the test ladder. `docs/experiments/001-edge-calibration.md` checks the threshold, the noise and the gap at the edge for each duty.
+
+## D024: Motor watchdog in a timer interrupt and one-try edge-sensor reads
+
+- **Date:** 2026-11-22
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+The step 2 firmware (D023) failed on the robot on 2026-11-22:
+- `approach` on the table kept driving after the sensors had passed the edge.
+- On the bench, with the tracks off the ground, `drive B 60 2000` kept driving after the board was pulled away from a sensor.
+- `drive B 50 500` kept driving after 500 ms, and the console did not answer `status` or `stop`.
+
+The control loop had stopped while the motors ran, and the motors kept their last PWM. Only the cut-off switch could stop them.
+
+The likely cause is in the sensor library: its register read repeats until a transfer succeeds (`VL53L4CD_I2CRead` in `platform.cpp`), so a stuck I2C bus hangs the loop for good. Motor noise on the I2C wires could make a sensor miss a clock edge and hold the bus. A second possibility is noise on the encoder wires, which have only the weak internal pull-ups, firing their interrupts so often that the processor does nothing else. The cause is not confirmed. D023 left 262 bytes of flash free.
+
+### Options
+
+1. A motor watchdog in a timer interrupt, outside the main loop.
+2. Poll the sensors with our own one-try reads instead of the library calls.
+3. Less noise, in hardware: a 100 nF capacitor across each track motor, sensor and encoder wires away from the motor wires, and I2C at 100 kHz as a test.
+4. Our own reads for the sensor start-up as well, or a patched copy of the library.
+
+### Choice
+
+Options 1 and 2. Option 3 is up to the team.
+
+- **Motor watchdog** (`firmware/src/safety.{h,cpp}`):
+  - It runs in the Timer0 compare-B interrupt, once per Timer0 cycle (16 MHz / 64 / 256 = 1.024 ms).
+  - It is armed while a track or the actuator is commanded. Every track and actuator command and every control tick kicks it, and a stop disarms it.
+  - After 50 cycles (about 51 ms, `WATCHDOG_MS`) without a kick, it pulls MOTOR_ENABLE low. Both L293D chips turn off, and the motors coast to a stop.
+  - The next control tick prints `watchdog: loop stalled, drivers off`, ends any approach run, and stops and disables the modules so they match the pin.
+- **One-try sensor reads** (`firmware/src/edge_sensors.cpp`):
+  - The polling reads the same registers as `VL53L4CD_CheckForDataReady()`, `VL53L4CD_ClearInterrupt()` and `VL53L4CD_GetResult()` (`vl53l4cd_api.cpp`): `0x0031` for data ready, `0x0086` to clear the interrupt, and `0x0089`, `0x008C` and `0x0096` for the range status, the SPAD count and the distance.
+  - The status mapping is copied from `GetResult()`. The interrupt polarity (`0x0030`) is read once after the start.
+  - Each transfer gets one try, limited by the 25 ms Wire timeout. A failed transfer marks the sensor `failed` until the next reset, so the edge gate stops the tracks and the console keeps working.
+  - The library still starts the sensors at boot, while the motors are off.
+- **`approach` is refused while a track is moving.** Found while adding the watchdog: the "Working" draw would have blocked the edge check while a `drive` command ran.
+- **To make room,** the `status` command and the display test pattern (`face test`) are removed. Trial builds measured `status` at 432 bytes and the test pattern at 56 bytes.
+
+### Reasons
+
+- **The watchdog works outside the main loop,** so it stops the motors whatever hangs the loop, as long as its interrupt runs.
+  - Timer0 already runs for `millis()`, and the core uses only its overflow interrupt (`wiring.c`).
+  - OC0B stays disconnected (COM0B1:0 = 0), so D3 remains I2C SCL.
+  - The Servo library uses only Timer1 on the ATmega32U4 (`ServoTimers.h`).
+  - The hardware watchdog is still ruled out (D023).
+- **Arming only while something moves** keeps the display draws, which block for at least 154 ms, from tripping it. They happen only while everything is stopped.
+- **One-try reads** turn a bus fault into a stop with a working console, so the fault shows in `tof` and can be logged.
+- **`stream` is kept over `status`:** it logs nearly the same values over time, which the experiments need.
+
+### Consequences
+
+- **The test that tells the causes apart is still open:** unplug the encoder signal wires and run `drive B 50 500` on the bench. If the cause is a flood of encoder interrupts, the timer interrupt may be held back as well, and the watchdog may not help.
+- **A trip coasts the motors** instead of braking them, so the robot stops later than at the edge gate. The watchdog is a backstop, not the normal stop.
+- **A bus fault still ends the run,** and the sensor stays `failed` until a reset. If the motors cause a bus fault on every run, the approach cannot finish, and option 3 is needed.
+- **A hang during the sensor start-up at boot is not covered,** but the motors are off then.
+- **Anything that blocks the console for 51 ms while a track runs,** such as `face <text>`, trips the watchdog. That is intended, and the test ladder uses it.
+- **Flash:** 28,326 of 28,672 bytes (346 free). RAM: 1,011 of 2,560 bytes.
+- **D023:** its consequence "A loop that hangs is not caught in software" no longer applies.
+
+## D025: Optimization task: how far the brush stops past the table edge
+
+- **Date:** 2026-11-22
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+D022 made squaring up to the table edge the optimization task, judged by the final angle to the edge. The runs on 2026-11-22 used the edge test sketch in `firmware/yuki_src/edge_detection_test.ino`, not the step 2 firmware in `firmware/src/` (D023). Claude Code wrote the sketch, and we reviewed, tuned and revised it on the robot.
+
+Update 2026-11-23: the sketch was removed, because it does not match the structure of `firmware/`. It was never committed, so the baseline below cannot be rerun from the repository. `firmware/src/` (D023, D024) is the code going forward. Its `approach` stops each track on its own and caps the duty at 70 % (`TRACK_MAX_DUTY_PCT`), so duties above 70 % need experiment 001 first.
+
+The sketch worked like this:
+- **Calibration (`c`):** each edge sensor takes 8 readings of the table, and their average is the baseline. The sketch refuses a baseline outside 20–180 mm or a spread of more than 20 mm.
+- **Threshold:** the baseline plus 35 mm, or plus half the baseline if that is larger (`MIN_EDGE_INCREASE_MM`).
+- **Drive (`g`):** both tracks drive forward at full duty. The sketch sets the enable pin of the driver high, with no PWM. When either sensor reading passes its threshold, both tracks stop. They also stop on an invalid reading, when a sensor has not delivered a reading for 180 ms, and after 2.5 s.
+- **Sensors:** the Pololu VL53L4CD library 1.0.0, with a 20 ms timing budget.
+
+Both tracks stop together, so the robot does not turn to square up, and the final angle says little about the controller. Three runs at full duty gave:
+- a gap of 20–30 mm between the front of the tracks and the table edge
+- the brush 30–40 mm past the edge, in every run
+
+When the brush stops past the edge in a dump cycle, the debris in front of it falls to the floor before the bucket is lowered. There is no time for more runs before the Part 2 deadline.
+
+### Options
+
+1. Keep D022: the final angle to the edge.
+2. How far the brush stops past the edge, with the track gaps as the constraint, tuned with the approach duty.
+3. As option 2, but tuned with the threshold instead of the duty.
+
+### Choice
+
+Option 2:
+- **Tuned:** the approach duty, from the slowest duty that moves the robot reliably with the brush down up to 100 %.
+- **Measured in each run, with a ruler:** how far the brush stops past the edge, and the gap between the front of each track and the edge.
+- **Constraint:** both gaps stay above 0 in every run.
+- **Best:** the duty with the smallest brush overshoot. Among the duties whose results cannot be told apart from the best one (their ranges overlap), the fastest wins.
+- **Baseline:** the three runs at full duty above.
+
+### Reasons
+
+- It fits the controller we have. Both tracks stop together, so the overshoot shows what the duty changes, and the angle does not.
+- The overshoot decides whether the dump cycle works: debris pushed past the edge is lost before the bucket is lowered.
+- A ruler is enough, and the baseline is already measured.
+- At full duty, the robot moves the farthest between passing the edge and standing still, so the duty is the first thing to tune. A lower threshold (option 3) is limited by the noise in the table readings, so it comes second.
+
+### Consequences
+
+- **D022:** the measure and the controller change. Its reality-gap points (the cone of the sensor, the off-center brush-arm mount, track slip) still apply.
+- **Sketch:** testing lower duties needs PWM on the motor driver inputs. Sheet 02 (`electronics/wiring/02_drivers.yml`) lists the pins with PWM.
+- **Stop:** the sketch turns off the motor driver to stop, so the motors coast (D024). Braking may shorten the overshoot and is worth a test.
+- **Part 2:** section 1 of `docs/part_2/README.md` and the poster report the task and the baseline. The duty sweep is future work.
+- **`CLAUDE.md`:** the Should goal, the MVP note and the list of experiments name this task (updated 2026-11-23).
 
 ## Template
 
