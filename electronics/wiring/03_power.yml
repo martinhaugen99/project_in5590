@@ -1,5 +1,5 @@
 # Sheet 03: 12 V wall adapter, cut-off switch, both converters, laptop USB and the common
-# ground (D005, D014, D015, D016, D017).
+# ground (D005, D014, D015, D016, D017, D020, D021).
 # Render: uv run wireviz -f s electronics/wiring/03_power.yml
 # Rules and color convention: .claude/skills/wiring-diagram/SKILL.md
 # The RAIL_* nodes here are the same nodes that sheets 01 and 02 draw their loads from.
@@ -15,14 +15,15 @@ connectors:
     notes: |
       12 V DC, 3.0 A, 36 W, LPS (D017). Measured 12.27 V, no load.
       Cable cut and split: + and - labeled after a multimeter check.
-      No adjustable current limit. Worst case about 2.2 A (D016).
+      No adjustable current limit. Worst case about 1.8 A (D021).
+      Plug in after the laptop USB, unplug first (D021).
 
   RAIL_12V_UNSW:
     style: simple
     type: +12V_UNSWITCHED junction
     notes: |
-      On the robot, before SW1.
-      Feeds encoder Vcc, J12/J13 (sheet 01)
+      On the robot, before SW1. Feeds encoder
+      Vcc, J12/J13 (sheet 01), and PS2 (D021)
 
   SW1:
     type: Cut-off switch, SCI R13-66 rocker, SPST
@@ -37,7 +38,7 @@ connectors:
     style: simple
     type: +12V_ACT junction (switched 12 V)
     notes: |
-      After SW1. Feeds both converters
+      After SW1. Feeds the BEC (PS3)
       and U3 VCC2 with C4 (sheet 02)
 
   BUS_GND:
@@ -45,17 +46,18 @@ connectors:
     type: GND bus
     notes: |
       Same bus as sheets 01 and 02. One common ground:
-      12 V adapter, both converters and the Nano (D005)
+      12 V adapter, both converters and the Leonardo (D005)
 
   PS2:
     type: LM2596 buck module (HTC MBC2596-01)
     pins: [IN+, IN-, OUT-, OUT+]
-    pinlabels: [Power in, Ground in, Ground out, Power out]
+    pinlabels: [Power in, Ground in, Ground out, Power out 3.3 V]
     notes: |
       Module datasheet R1.2: input 4-35 V, at least 1.5 V above
       the output. 2 A rated. IN- and OUT- are the same ground.
-      Trimmer sets the output: adjust while measuring at the
-      motor terminals at full duty (D014). Keep it above 5.2 V.
+      Set to 3.3 V with the trimmer (D021). Measure OUT before
+      connecting the edge sensors: VL53L4CD AVDD 2.6-3.5 V,
+      3.6 V abs max (DS13812 tables 11 and 12).
 
   PS3:
     type: Mateksys BEC12S-PRO
@@ -67,31 +69,34 @@ connectors:
       No reverse-polarity protection: check IN is +.
       Measure OUT before connecting the servos (D014).
 
-  RAIL_VM_TRACK:
+  RAIL_3V3_TOF:
     style: simple
-    type: VM_TRACK junction
-    notes: Feeds U2 VCC2 with C2 (sheet 02)
+    type: +3V3_TOF junction
+    notes: |
+      Feeds J7/J8 VDD only (sheet 01).
+      Never joined to +3V3_LOGIC
 
   RAIL_5V_SERVO:
     style: simple
     type: +5V_SERVO junction
     notes: |
       Feeds servo V+, J10/J11 (sheet 01),
-      and U2/U3 VCC1 with C1/C3 (sheet 02)
+      U2/U3 VCC1 with C1/C3, and U2 VCC2
+      with C2 (sheet 02, D021)
 
   LAPTOP:
     style: simple
     type: Laptop USB port
-    notes: Powers and programs the Nano, logs data (D004, D005)
+    notes: Powers and programs the Leonardo, logs data (D004, D005, D020)
 
   U1:
-    type: Arduino Nano ESP32 (ABX00083)
-    pins: [USB-C]
-    pinlabels: [VUSB 4.8-5.5 V]
+    type: Arduino Leonardo (A000057)
+    pins: [USB]
+    pinlabels: [Micro-USB]
     notes: |
-      3V3 pin feeds BUS_3V3, GND pin joins BUS_GND (sheet 01, W1).
-      3.3 V loads: edge sensors, IMU, actuator pot, display LED input.
-      VBUS pin (JP1-12, USB 5 V) feeds the display VCC (sheet 01).
+      3V3 pin (50 mA max) feeds +3V3_LOGIC: TFT RESET
+      pull-up and LED only. 5V pin feeds +5V_USB: display
+      VCC and actuator pot. GND pin joins BUS_GND (sheet 01, W1).
 
 cables:
   W40:
@@ -112,12 +117,12 @@ cables:
   W43:
     category: bundle
     colors: [RD, BK, BK]
-    wirelabels: [+12V_ACT, GND, GND]
+    wirelabels: [+12V_UNSWITCHED, GND, GND]
 
   W44:
     category: bundle
     colors: [PK]
-    wirelabels: [VM_TRACK]
+    wirelabels: [+3V3_TOF]
 
   W45:
     category: bundle
@@ -130,9 +135,9 @@ cables:
     wirelabels: [+5V_SERVO]
 
   W47:
-    type: USB-C cable
+    type: Micro-USB cable
     colors: [VT]
-    wirelabels: [USB_VBUS and data]
+    wirelabels: [USB 5 V and data]
 
 connections:
   # 12 V adapter into the robot
@@ -151,8 +156,8 @@ connections:
     - W42: [1]
     - RAIL_12V_ACT: [1]
 
-  # LM2596: track motor supply
-  - - RAIL_12V_ACT: [1]
+  # LM2596 at 3.3 V: edge-sensor supply, before the cut-off switch (D021)
+  - - RAIL_12V_UNSW: [1]
     - W43: [1]
     - PS2: [IN+]
   - - BUS_GND: [1, 1]
@@ -160,9 +165,9 @@ connections:
     - PS2: [IN-, OUT-]
   - - PS2: [OUT+]
     - W44: [1]
-    - RAIL_VM_TRACK: [1]
+    - RAIL_3V3_TOF: [1]
 
-  # BEC12S-PRO: servo and L293D logic supply
+  # BEC12S-PRO: servos, track motors and L293D logic (D021)
   - - RAIL_12V_ACT: [1]
     - W45: [1]
     - PS3: [IN]
@@ -173,7 +178,7 @@ connections:
     - W46: [1]
     - RAIL_5V_SERVO: [1]
 
-  # Laptop USB: Nano ESP32 and everything on 3.3 V
+  # Laptop USB: the Leonardo, the display and the small 3.3 V loads
   - - LAPTOP: [1]
     - W47: [1]
-    - U1: [USB-C]
+    - U1: [USB]

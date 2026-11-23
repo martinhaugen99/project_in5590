@@ -1,7 +1,8 @@
-# Sheet 01: Nano ESP32 to edge sensors, display, servos, IMU and encoders (D015).
+# Sheet 01: Arduino Leonardo to edge sensors, display, servos and encoders (D015, D020, D021).
 # Render: uv run wireviz -f s electronics/wiring/01_signals.yml
 # Rules and color convention: .claude/skills/wiring-diagram/SKILL.md
-# Layout: rails and buses on the left, the Nano and R3 in the middle, the parts on the right.
+# Layout: rails and buses on the left, the Leonardo, R3 and the dividers in the middle,
+# the parts on the right.
 
 metadata:
   title: "M.A.T.S wiring, sheet 01: signals"
@@ -21,12 +22,30 @@ connectors:
       5.2 V from the BEC12S-PRO,
       after the cut-off switch (sheet 03)
 
+  RAIL_3V3_TOF:
+    style: simple
+    type: +3V3_TOF rail
+    notes: |
+      LM2596 set to 3.3 V, before the
+      cut-off switch (sheet 03, D021).
+      Edge sensors only.
+      Never join to +3V3_LOGIC
+
   BUS_3V3:
     style: simple
     type: +3V3_LOGIC bus
     notes: |
       Joined on the solderable board.
-      Fed from Nano 3V3 (MP2322GQH, 1 A max)
+      Fed from Leonardo 3V3 (50 mA max).
+      TFT RESET pull-up and LED only (D020)
+
+  BUS_5V:
+    style: simple
+    type: +5V_USB bus
+    notes: |
+      Joined on the solderable board.
+      Fed from the Leonardo 5V pin (laptop USB).
+      Display VCC and actuator pot (sheet 02)
 
   BUS_GND:
     style: simple
@@ -36,16 +55,15 @@ connectors:
       the 12 V adapter GND (sheet 03)
 
   U1:
-    type: Arduino Nano ESP32 (ABX00083)
-    pins: [JP1-1, JP1-2, JP1-5, JP1-6, JP1-7, JP1-8, JP1-9, JP1-10, JP1-11, JP1-12, JP1-14,
-           JP2-1, JP2-2, JP2-8, JP2-9, JP2-10, JP2-11]
-    pinlabels: [D13 GPIO48, 3V3, A1 GPIO2, A2 GPIO3, A3 GPIO4, A4 GPIO11, A5 GPIO12,
-                A6 GPIO13, A7 GPIO14, VBUS (USB 5 V), GND, D12 GPIO47, D11 GPIO38, D5 GPIO8,
-                D4 GPIO7, D3 GPIO6, D2 GPIO5]
+    type: Arduino Leonardo (A000057)
+    pins: [3V3, 5V, GND, D0, D1, D2, D3, D4, D5, A1, A2, A3, A4, A5, ICSP-3, ICSP-4]
+    pinlabels: [3V3, 5V, GND, D0 INT2 (RX), D1 INT3 (TX), D2 SDA, D3 SCL, D4, D5, A1,
+                A2 (D20), A3 (D21), A4 (D22), A5 (D23), ICSP-3 SCK, ICSP-4 COPI]
     notes: |
-      Header pins: ABX00083 datasheet, section 12.
-      Powered by laptop USB-C.
-      D0, D1, D6-D10 and A0: sheet 02.
+      Pins: A000057 full pinout (D020).
+      5 V logic. Powered by laptop micro-USB.
+      D6-D12 and A0: sheet 02.
+      D13 (LED) and ICSP-1 (CIPO): free.
       A1 (BUTTON_ADC): button ladder not documented yet.
 
   R3:
@@ -53,14 +71,33 @@ connectors:
     subtype: TFT RESET pull-up
     pins: [1, 2]
 
+  R10_R17:
+    type: Resistor dividers, 4 x (1 kOhm + 2 kOhm)
+    subtype: TFT signals, 5 V to 3.3 V
+    pins: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    pinlabels: [TFT_CS in, TFT_CS out, TFT_DC in, TFT_DC out, TFT_MOSI in, TFT_MOSI out,
+                TFT_SCK in, TFT_SCK out, GND (R11 R13 R15 R17)]
+    notes: |
+      Per line: 1 kOhm in series (R10, R12, R14, R16),
+      2 kOhm from out to GND (R11, R13, R15, R17).
+      Out = 2/3 of in: 3.33 V at 5.0 V, 2.8 V at the
+      32U4 VOH min of 4.2 V (7766J table 29-1).
+      ILI9341 V1.09 section 18: VIH 0.7 VDDI to VDDI,
+      abs max VDDI + 0.3 V. 1.7 mA per line when high.
+
   J7:
     type: SATEL-VL53L4CD, left edge sensor
     pins: [1, 2, 3, 4, 5, 6]
     pinlabels: [GND, VDD, SCL, SDA, GPIO1, XSHUT]
     notes: |
-      ST DB4629, figure 4. 3.3 V supply.
-      On board: 10 kOhm pull-ups on XSHUT and GPIO1,
-      2.2 kOhm I2C pull-ups via solder bridges SB2/SB4.
+      ST DB4629, figures 4 and 5. 3.3 V from +3V3_TOF (D021).
+      No regulator, no level shifter: 3.6 V abs max
+      on every pin (DS13812 table 11).
+      XSHUT driven open-drain by the Leonardo (D020).
+      On board, to VDD: 10 kOhm pull-ups on XSHUT and GPIO1,
+      2.2 kOhm I2C pull-ups: R1 to SDA via SB1/SB2,
+      R2 to SCL via SB3/SB4. Photo 2026-11-22: 0 Ohm
+      links fitted at SB1 and SB3, so both connected.
       GPIO1 not connected.
 
   J8:
@@ -77,9 +114,10 @@ connectors:
     pinlabels: [VCC, GND, CS, RESET, DC/RS, SDI/MOSI, SCK, LED, SDO/MISO, T_CLK, T_CS, T_DIN,
                 T_DO, T_IRQ]
     notes: |
-      J1 is open (checked 2026-11-21): VCC on 5 V from Nano VBUS,
-      through the module's own 3.3 V regulator. Never bridge J1 while
-      VCC is on 5 V. Logic stays 3.3 V.
+      J1 is open (checked 2026-11-21): VCC on 5 V from the
+      Leonardo 5V pin, through the module's own 3.3 V regulator.
+      Never bridge J1 while VCC is on 5 V.
+      Logic 3.3 V (LCDwiki): CS, DC, SDI and SCK through R10-R17.
       LED drives the backlight transistor: on 3.3 V = always on.
       SDO/MISO not connected. Touch pins 10-14 (separate touch SPI,
       XPT2046 on the module): touch not used, not connected.
@@ -100,23 +138,14 @@ connectors:
       4.8-6 V (DFRobot).
       Lead: brown GND, red V+
 
-  U4:
-    type: SparkFun OpenLog Artemis (IMU)
-    pins: [J4-1, J4-2, J4-3, J4-4, J4-5, J4-6]
-    pinlabels: [AD11, AD13/RX1, AD12/TX1, AD32, 3.3V, GND]
-    notes: |
-      Header J4: SparkFun schematic v10.
-      Regulated 3.3 V into J4-5 (SparkFun hookup guide).
-      Do not plug in its USB-C at the same time.
-
   J12:
     type: Omron E6A2-CW3C encoder, left track
     pins: [1, 2, 3, 4, 5]
     pinlabels: [Vcc, 0 V, Phase A, Phase B, Phase Z]
     notes: |
       5-12 V supply, NPN open collector (Omron).
-      Phase A pulled up to 3.3 V by the Nano's
-      internal pull-up (INPUT_PULLUP).
+      Phase A pulled up to 5 V by the Leonardo's
+      internal pull-up (INPUT_PULLUP, 20-50 kOhm).
       Phase B and Z not used: insulate.
 
   J13:
@@ -130,8 +159,8 @@ connectors:
 cables:
   W1:
     category: bundle
-    colors: [RDWH, BK]
-    wirelabels: [+3V3_LOGIC, GND]
+    colors: [RDWH, BK, VT]
+    wirelabels: [+3V3_LOGIC, GND, +5V_USB]
 
   W5:
     category: bundle
@@ -140,23 +169,24 @@ cables:
 
   W2:
     category: bundle
-    colors: [RDWH, BK, YE, BU, GN]
-    wirelabels: [+3V3_LOGIC, GND, SCL, SDA, TOF_L_XSHUT]
+    colors: [PK, BK, YE, BU, GN]
+    wirelabels: [+3V3_TOF, GND, SCL, SDA, TOF_L_XSHUT]
 
   W3:
     category: bundle
-    colors: [RDWH, BK, YE, BU, GN]
-    wirelabels: [+3V3_LOGIC, GND, SCL, SDA, TOF_R_XSHUT]
+    colors: [PK, BK, YE, BU, GN]
+    wirelabels: [+3V3_TOF, GND, SCL, SDA, TOF_R_XSHUT]
+
+  W16:
+    category: bundle
+    colors: [GN, WH, BN, TQ, BK]
+    wirelabels: [TFT_CS, TFT_DC, TFT_MOSI, TFT_SCK, GND]
 
   W4:
     category: bundle
     colors: [VT, BK, GN, GY, WH, BN, TQ, RDWH]
-    wirelabels: [USB_VBUS, GND, TFT_CS, TFT_RESET, TFT_DC, TFT_MOSI, TFT_SCK, +3V3_LOGIC]
-
-  W8:
-    category: bundle
-    colors: [RDWH, BK, GN]
-    wirelabels: [+3V3_LOGIC, GND, IMU_TX]
+    wirelabels: [+5V_USB, GND, TFT_CS_3V3, TFT_RESET, TFT_DC_3V3, TFT_MOSI_3V3, TFT_SCK_3V3,
+                 +3V3_LOGIC]
 
   W6:
     category: bundle
@@ -185,72 +215,70 @@ cables:
     wirelabels: [+12V_UNSWITCHED, GND, ENC_R_A, NC, NC]
 
 connections:
-  # Buses to the Nano power pins (the Nano 3V3 pin feeds the bus)
+  # Buses to the Leonardo power pins (the 3V3 and 5V pins feed their buses)
   - - BUS_3V3: [1]
     - W1: [1]
-    - U1: [JP1-2]
+    - U1: [3V3]
   - - BUS_GND: [1]
     - W1: [2]
-    - U1: [JP1-14]
+    - U1: [GND]
+  - - BUS_5V: [1]
+    - W1: [3]
+    - U1: [5V]
 
   # Left edge sensor
-  - - BUS_3V3: [1]
+  - - RAIL_3V3_TOF: [1]
     - W2: [1]
     - J7: [2]
   - - BUS_GND: [1]
     - W2: [2]
     - J7: [1]
-  - - U1: [JP1-9, JP1-8, JP2-9]
+  - - U1: [D3, D2, D5]
     - W2: [3, 4, 5]
     - J7: [3, 4, 6]
 
   # Right edge sensor
-  - - BUS_3V3: [1]
+  - - RAIL_3V3_TOF: [1]
     - W3: [1]
     - J8: [2]
   - - BUS_GND: [1]
     - W3: [2]
     - J8: [1]
-  - - U1: [JP1-9, JP1-8, JP2-8]
+  - - U1: [D3, D2, D4]
     - W3: [3, 4, 5]
     - J8: [3, 4, 6]
 
-  # Display
+  # Display: dividers between the Leonardo outputs and the 3.3 V inputs
+  - - U1: [A3, A2, ICSP-4, ICSP-3]
+    - W16: [1, 2, 3, 4]
+    - R10_R17: [1, 3, 5, 7]
+  - - BUS_GND: [1]
+    - W16: [5]
+    - R10_R17: [9]
   - - BUS_3V3: [1]
     - W5: [1]
     - R3: [1]
-  - - U1: [JP1-12]
+  - - BUS_5V: [1]
     - W4: [1]
     - J9: [1]
   - - BUS_GND: [1]
     - W4: [2]
     - J9: [2]
-  - - U1: [JP1-7]
+  - - R10_R17: [2]
     - W4: [3]
     - J9: [3]
   - - R3: [2]
     - W4: [4]
     - J9: [4]
-  - - U1: [JP1-6, JP2-2, JP1-1]
+  - - R10_R17: [4, 6, 8]
     - W4: [5, 6, 7]
     - J9: [5, 6, 7]
   - - BUS_3V3: [1]
     - W4: [8]
     - J9: [8]
 
-  # IMU
-  - - BUS_3V3: [1]
-    - W8: [1]
-    - U4: [J4-5]
-  - - BUS_GND: [1]
-    - W8: [2]
-    - U4: [J4-6]
-  - - U1: [JP2-1]
-    - W8: [3]
-    - U4: [J4-3]
-
   # Servos
-  - - U1: [JP1-10]
+  - - U1: [A4]
     - W6: [1]
     - J10: [1]
   - - RAIL_5V_SERVO: [1]
@@ -259,7 +287,7 @@ connections:
   - - BUS_GND: [1]
     - W6: [3]
     - J10: [3]
-  - - U1: [JP1-11]
+  - - U1: [A5]
     - W7: [1]
     - J11: [1]
   - - RAIL_5V_SERVO: [1]
@@ -276,7 +304,7 @@ connections:
   - - BUS_GND: [1]
     - W9: [2]
     - J12: [2]
-  - - U1: [JP2-11]
+  - - U1: [D0]
     - W9: [3]
     - J12: [3]
   - - W9: [4, 5]
@@ -287,7 +315,7 @@ connections:
   - - BUS_GND: [1]
     - W10: [2]
     - J13: [2]
-  - - U1: [JP2-10]
+  - - U1: [D1]
     - W10: [3]
     - J13: [3]
   - - W10: [4, 5]

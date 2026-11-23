@@ -1,22 +1,14 @@
-# Sheet 02: Nano ESP32 to both L293D chips, track motors, linear actuator and the
-# enable and pull-down resistors (D015).
+# Sheet 02: Arduino Leonardo to both L293D chips, track motors, linear actuator and the
+# enable and pull-down resistors (D015, D020, D021).
 # Render: uv run wireviz -f s electronics/wiring/02_drivers.yml
 # Rules and color convention: .claude/skills/wiring-diagram/SKILL.md
-# Layout: rails, buses and the Nano on the left, resistors and drivers in the middle,
+# Layout: rails, buses and the Leonardo on the left, resistors and drivers in the middle,
 # motors and actuator on the right.
 
 metadata:
   title: "M.A.T.S wiring, sheet 02: motor drivers"
 
 connectors:
-  RAIL_VM_TRACK:
-    style: simple
-    type: VM_TRACK rail
-    notes: |
-      LM2596 output, after the cut-off switch (sheet 03).
-      Set for about 4.5 V at the motors (D014),
-      and never below VCC1 = 5.2 V (TI SLRS008D 6.3)
-
   RAIL_12V_ACT:
     style: simple
     type: +12V_ACT rail
@@ -29,11 +21,12 @@ connectors:
     type: +5V_SERVO rail
     notes: |
       5.2 V from the BEC12S-PRO, after the
-      cut-off switch (sheet 03). L293D logic supply
+      cut-off switch (sheet 03). L293D logic (VCC1)
+      and track motor supply (U2 VCC2, D021)
 
-  BUS_3V3:
+  BUS_5V:
     style: simple
-    type: +3V3_LOGIC bus
+    type: +5V_USB bus
     notes: Same bus as sheet 01
 
   BUS_GND:
@@ -42,19 +35,20 @@ connectors:
     notes: Same bus as sheet 01
 
   U1:
-    type: Arduino Nano ESP32 (ABX00083)
-    pins: [JP1-4, JP2-3, JP2-4, JP2-5, JP2-6, JP2-7, JP2-14, JP2-15]
-    pinlabels: [A0 GPIO1, D10 GPIO21, D9 GPIO18, D8 GPIO17, D7 GPIO10, D6 GPIO9,
-                D0 GPIO44, D1 GPIO43]
+    type: Arduino Leonardo (A000057)
+    pins: [A0, D6, D7, D8, D9, D10, D11, D12]
+    pinlabels: [A0, D6 PWM (Timer4), D7, D8, D9 (Timer1), D10 (Timer1), D11 PWM (Timer0), D12]
     notes: |
-      Header pins: ABX00083 datasheet, section 12.
-      D0/D1 are UART0 RX/TX: the boot ROM prints on D1
-      at reset, while MOTOR_ENABLE is still low (pins.h).
+      Pins: A000057 full pinout (D020).
+      PWM only on D6 and D11: the Servo library
+      takes Timer1, so D9 and D10 have no PWM.
+      Pins are inputs during reset, so R2 holds
+      MOTOR_ENABLE low (7766J 10.2.1).
       Other pins: sheet 01.
 
   R1:
     type: Resistor 1 kOhm
-    subtype: series, D0 to MOTOR_ENABLE
+    subtype: series, D12 to MOTOR_ENABLE
     pins: [1, 2]
 
   R2:
@@ -63,7 +57,7 @@ connectors:
     pins: [1, 2]
     notes: |
       Holds all four enable inputs low
-      while D0 floats
+      while D12 floats
 
   R4_R9:
     type: Resistors 10 kOhm, pull-downs
@@ -79,8 +73,9 @@ connectors:
     pins: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     pinlabels: ["1,2EN", 1A, 1Y, GND, GND, 2Y, 2A, VCC2, "3,4EN", 3A, 3Y, GND, GND, 4Y, 4A, VCC1]
     notes: |
-      TI SLRS008D. VCC1 4.5-7 V, VCC2 from VCC1 to 36 V.
-      Inputs: VIH min 2.3 V, so 3.3 V logic works.
+      TI SLRS008D. VCC1 4.5-7 V, VCC2 from VCC1 to 36 V:
+      both on +5V_SERVO, 5.2 V (D021).
+      Inputs: VIH min 2.3 V, driven at 5 V by the Leonardo.
       600 mA per channel. Pins 4, 5, 12, 13: ground and heat sink.
       Bypass: C1 at VCC1, C2 at VCC2 (section 10).
 
@@ -139,14 +134,15 @@ connectors:
     pinlabels: [Pot - reference, Motor power, Motor power, Pot + reference, Pot wiper]
     notes: |
       Datasheet Rev D. Pot 5 kOhm +-50%, wiper between the
-      two references (0-3.3 V). Stall 210 mA at 12 V.
+      two references: GND and +5V_USB (PQ12: any stable
+      reference voltages, D020). Stall 210 mA at 12 V.
       Max duty cycle 20%. Swap pins 2/3 to reverse.
 
 cables:
   W20:
     category: bundle
     colors: [WH]
-    wirelabels: [D0 to R1]
+    wirelabels: [D12 to R1]
 
   W22:
     category: bundle
@@ -160,9 +156,9 @@ cables:
 
   W11:
     category: bundle
-    colors: [WH, WH, GN, GY, BN, TQ, OG, PK, BK, BK, BK, BK]
+    colors: [WH, WH, GN, GY, BN, TQ, OG, OG, BK, BK, BK, BK]
     wirelabels: [MOTOR_ENABLE, MOTOR_ENABLE, LEFT_IN1, LEFT_IN2, RIGHT_IN1, RIGHT_IN2,
-                 +5V_SERVO, VM_TRACK, GND, GND, GND, GND]
+                 +5V_SERVO, +5V_SERVO, GND, GND, GND, GND]
 
   W12:
     category: bundle
@@ -177,8 +173,8 @@ cables:
 
   W31:
     category: bundle
-    colors: [PK, BK]
-    wirelabels: [VM_TRACK, GND]
+    colors: [OG, BK]
+    wirelabels: [+5V_SERVO, GND]
 
   W32:
     category: bundle
@@ -202,12 +198,12 @@ cables:
 
   W15:
     category: bundle
-    colors: [BK, BUWH, BNWH, RDWH, GNWH]
-    wirelabels: [GND, ACT_MOTOR_2, ACT_MOTOR_3, +3V3_LOGIC, ACT_FEEDBACK]
+    colors: [BK, BUWH, BNWH, VT, GNWH]
+    wirelabels: [GND, ACT_MOTOR_2, ACT_MOTOR_3, +5V_USB, ACT_FEEDBACK]
 
 connections:
-  # Enable network: D0 -> R1 -> MOTOR_ENABLE, R2 to GND
-  - - U1: [JP2-14]
+  # Enable network: D12 -> R1 -> MOTOR_ENABLE, R2 to GND
+  - - U1: [D12]
     - W20: [1]
     - R1: [1]
   - - R1: [2]
@@ -218,7 +214,7 @@ connections:
     - R2: [2]
 
   # Pull-downs on the six driver inputs
-  - - U1: [JP2-15, JP2-7, JP2-6, JP2-5, JP2-4, JP2-3]
+  - - U1: [D10, D6, D7, D11, D9, D8]
     - W22: [1, 2, 3, 4, 5, 6]
     - R4_R9: [1, 2, 3, 4, 5, 6]
   - - BUS_GND: [1]
@@ -229,13 +225,13 @@ connections:
   - - R1: [2, 2]
     - W11: [1, 2]
     - U2: [1, 9]
-  - - U1: [JP2-7, JP2-6, JP2-5, JP2-4]
+  - - U1: [D6, D7, D11, D9]
     - W11: [3, 4, 5, 6]
     - U2: [2, 7, 10, 15]
   - - RAIL_5V_SERVO: [1]
     - W11: [7]
     - U2: [16]
-  - - RAIL_VM_TRACK: [1]
+  - - RAIL_5V_SERVO: [1]
     - W11: [8]
     - U2: [8]
   - - BUS_GND: [1, 1, 1, 1]
@@ -246,7 +242,7 @@ connections:
   - - R1: [2]
     - W12: [1]
     - U3: [1]
-  - - U1: [JP2-3, JP2-15]
+  - - U1: [D8, D10]
     - W12: [2, 3]
     - U3: [2, 7]
   - - RAIL_5V_SERVO: [1]
@@ -281,16 +277,16 @@ connections:
     - W14: [1, 2]
     - J5: [1, 2]
 
-  # Linear actuator: motor from U3, position pot on 3.3 V
+  # Linear actuator: motor from U3, position pot between GND and +5V_USB
   - - BUS_GND: [1]
     - W15: [1]
     - J6: [1]
   - - U3: [3, 6]
     - W15: [2, 3]
     - J6: [2, 3]
-  - - BUS_3V3: [1]
+  - - BUS_5V: [1]
     - W15: [4]
     - J6: [4]
-  - - U1: [JP1-4]
+  - - U1: [A0]
     - W15: [5]
     - J6: [5]
