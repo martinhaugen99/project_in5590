@@ -1,7 +1,6 @@
 // Named constants for the firmware. Each value states its source: a datasheet, the installed
-// core or library, a bench check, or a limit chosen for safe bring-up. Values that need a
-// measurement on the robot (edge thresholds, actuator end positions, servo angles, button
-// levels) are added in step 2, after the bench checks in README.md.
+// core or library, a measurement on the robot, or a chosen limit. The step 2 values are
+// explained in D023 and are to be checked in docs/experiments/001-edge-calibration.md.
 #pragma once
 
 #include <Arduino.h>
@@ -9,43 +8,39 @@
 namespace config {
 
 // --- Serial console --------------------------------------------------------------------------
-// The Nano ESP32 console is USB CDC, which ignores the baud rate. The value matches
+// The Leonardo console is USB CDC, which ignores the baud rate. The value matches
 // monitor_speed in platformio.ini.
 constexpr uint32_t CONSOLE_BAUD = 115200;
-constexpr size_t CONSOLE_LINE_MAX = 96;
+// Longest command line. Chosen: the longest command is about 30 characters.
+constexpr uint8_t CONSOLE_LINE_MAX = 48;
 // Period of the CSV status lines for `stream on`. Chosen: 10 lines per second.
 constexpr uint32_t STREAM_PERIOD_MS = 100;
 
 // --- Bring-up safety limits (chosen, not measured) ------------------------------------------
-// Longest run of one `drive` command. Step 1 has no edge reflex, so the tracks must be off
-// the ground.
+// Longest run of one track command, such as `drive`.
 constexpr uint32_t TRACK_MAX_RUN_MS = 3000;
 // Longest run of one `act` command: about 5 mm at the no-load speed of 10 mm/s of the
 // PQ12 100:1 (PQ12 datasheet). The PQ12-P has no limit switches, so jog in short steps.
 constexpr uint32_t ACT_MAX_JOG_MS = 500;
 
-// --- PWM (LEDC). The ESP32-S3 has 8 channels, 4 timers and 14-bit timers (soc_caps.h). -------
-// Track motors and actuator: PWM on the L293D inputs with the enable pin high. The L293D
-// datasheet (SLRS008D) states no maximum input frequency. Its switching test uses a 5 kHz
-// pulse rate (Figure 2), and the propagation and transition times (up to 800 ns and 300 ns,
-// section 6.6) are below 1 % of a 200 us period.
-constexpr uint32_t MOTOR_PWM_HZ = 5000;
-constexpr uint8_t MOTOR_PWM_BITS = 10;
-constexpr uint32_t MOTOR_PWM_MAX = (1u << MOTOR_PWM_BITS) - 1;
+// --- Track PWM ---------------------------------------------------------------------------------
+// analogWrite() takes 0..255 (Arduino AVR core, wiring_analog.c). Timer0 (D11) runs fast PWM
+// with prescaler 64, 16 MHz / 64 / 256 = 977 Hz. tracks::begin() switches Timer4 (D6) from
+// phase and frequency correct to fast PWM, so both tracks run at about 977 Hz (ATmega32U4
+// datasheet 7766J, Table 15-18; OCR4C resets to 0xFF, section 15.12).
+constexpr uint8_t MOTOR_PWM_MAX = 255;
 
-// Servos (DFRobot SER0006): signal range 500-2500 us, neutral 1500 us (DFRobot product page).
-// The page states no frame period. 50 Hz (20 ms) is the standard RC servo frame.
-constexpr uint32_t SERVO_PWM_HZ = 50;
-constexpr uint8_t SERVO_PWM_BITS = 14;
-constexpr uint32_t SERVO_PERIOD_US = 1000000u / SERVO_PWM_HZ;
-constexpr uint32_t SERVO_MIN_US = 500;
-constexpr uint32_t SERVO_MAX_US = 2500;
+// --- Servos (DFRobot SER0006) ------------------------------------------------------------------
+// Signal range 500-2500 us, neutral 1500 us (DFRobot product page). The Servo library sends
+// a 20 ms frame (Servo.h, REFRESH_INTERVAL).
+constexpr uint16_t SERVO_MIN_US = 500;
+constexpr uint16_t SERVO_MAX_US = 2500;
 
-// --- Motor and actuator direction (not yet checked on the robot) -----------------------------
-// Set during the bench checks in README.md: `drive L 30 500` must move the left track
-// forward, and `act extend 300` must extend the actuator. Flip a flag if it moves the wrong way.
+// --- Motor and actuator direction -------------------------------------------------------------
+// Checked on the bench on 2026-11-22 (README.md, bench checklist): `drive L 30 500` and
+// `drive R 30 500` move each track forward. Flip a flag if a part is rewired.
 constexpr bool LEFT_MOTOR_REVERSED = false;
-constexpr bool RIGHT_MOTOR_REVERSED = false;
+constexpr bool RIGHT_MOTOR_REVERSED = true;
 constexpr bool ACT_EXTEND_ON_IN1 = true;
 
 // --- Edge sensors (STM32duino VL53L4CD 1.0.5) -------------------------------------------------
@@ -53,14 +48,47 @@ constexpr bool ACT_EXTEND_ON_IN1 = true;
 // sensor gets its own address at boot through its XSHUT pin.
 constexpr uint8_t TOF_LEFT_ADDRESS = 0x54;
 constexpr uint8_t TOF_RIGHT_ADDRESS = 0x56;
+// I2C fast mode. The VL53L4CD takes up to 1 MHz (DS13812 Rev 8, Table 5), and the
+// ATmega32U4 TWI up to 400 kHz (7766J, section 20). With both boards on the bus, each line has
+// 1.1 kOhm to 3.3 V, which DS13812 Table 3 allows for fast mode up to 270 pF.
+constexpr uint32_t I2C_CLOCK_HZ = 400000;
+// Longest wait for one I2C transfer. 25 ms is the default argument of setWireTimeout() in the
+// AVR Wire library (Wire.h); without the call, the timeout is off (twi.c).
+constexpr uint32_t I2C_TIMEOUT_US = 25000;
+// The sensor boots in at most 1.2 ms after XSHUT rises (DS13812 Rev 8, section 2.7).
+// Chosen: 2 ms.
+constexpr uint32_t TOF_BOOT_MS = 2;
 // Library range 10-200 ms, library default 50 ms. Tuned in step 2 for the edge reflex.
 constexpr uint32_t TOF_TIMING_BUDGET_MS = 50;
 // How often the main loop asks each sensor for new data. Chosen: 10 polls per timing budget.
 constexpr uint32_t TOF_POLL_PERIOD_MS = 5;
 
-// --- IMU link (OpenLog Artemis) ----------------------------------------------------------------
-// The baud rate is set in the OpenLog Artemis serial logging menu, so it is given with
-// `imu on <baud>` instead of being fixed here.
-constexpr size_t IMU_LINE_MAX = 256;
+// --- Step 2: edge gate and edge approach (D023) ----------------------------------------------
+// Period of the control tick in main.cpp: edge sensors, edge approach, track gate. Chosen to
+// match TOF_POLL_PERIOD_MS.
+constexpr uint32_t LOOP_PERIOD_MS = 5;
+// A sensor sees the table when its distance is at most this value with range status 0.
+// Measured on 2026-11-22 with the brush down and its servo off: about 50 mm on the table and
+// more than 100 mm past the edge. The threshold is halfway between (chosen).
+constexpr uint16_t EDGE_TABLE_MAX_MM = 75;
+// A reading older than this counts as "no table". Chosen: three timing budgets.
+constexpr uint32_t EDGE_STALE_MS = 3 * TOF_TIMING_BUDGET_MS;
+// Speed cap for every track command. Chosen, so the edge approach can test 50, 60 and 70 %. The
+// optimization (D025) tunes the duty up to 100 %: raise the cap only after experiment 001 shows
+// a gap at the edge at the new duty.
+constexpr int8_t TRACK_MAX_DUTY_PCT = 70;
+// Default duty of `approach`: the slowest duty that moved the robot reliably on the table with
+// the brush down (measured on 2026-11-22).
+constexpr int8_t APPROACH_DEFAULT_DUTY_PCT = 50;
+// The edge approach renews each track command with this run time in every tick, so a track
+// stops by itself when the approach stops renewing it. Chosen: 10 ticks.
+constexpr uint32_t TRACK_LEASE_MS = 50;
+// Longest edge approach, from the start of the tracks. Chosen: the GIF lasts at most 10 s.
+constexpr uint32_t APPROACH_MAX_MS = 8000;
+// Longest square-up turn after the first track has stopped. Chosen: ends a stalled turn.
+constexpr uint32_t SQUARE_MAX_MS = 3000;
+// Motor watchdog (D024): Timer0 cycles (1.024 ms each) without a kick before the interrupt turns
+// the drivers off. Chosen: 10 control ticks, about 51 ms.
+constexpr uint8_t WATCHDOG_MS = 50;
 
 }  // namespace config

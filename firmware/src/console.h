@@ -1,4 +1,5 @@
-// Serial command console over USB for bench bring-up (step 1). Type `help` for the commands.
+// Serial command console over USB for the bench checks and the edge approach (step 2). Type
+// `help` for the commands.
 #pragma once
 
 #include <Arduino.h>

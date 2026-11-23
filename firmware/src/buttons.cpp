@@ -9,11 +9,7 @@ void begin() {
 }
 
 uint16_t raw() {
-    return analogRead(pins::BUTTON_ADC);
-}
-
-uint32_t millivolts() {
-    return analogReadMilliVolts(pins::BUTTON_ADC);
+    return static_cast<uint16_t>(analogRead(pins::BUTTON_ADC));
 }
 
 }  // namespace buttons

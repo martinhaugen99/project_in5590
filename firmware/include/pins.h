@@ -1,80 +1,70 @@
-// Pin map of M.A.T.S. The wiring sheets in electronics/wiring/ are the source of truth (D015):
-// 01_signals.yml (sensors, display, servos, IMU, encoders) and 02_drivers.yml (motor drivers).
-// The sheets use Arduino pin labels (D0..D13, A0..A7).
+// Pin map of M.A.T.S on the Arduino Leonardo (D020). The wiring sheets in electronics/wiring/
+// are the source of truth (D015): 01_signals.yml (sensors, display, servos, encoders) and
+// 02_drivers.yml (motor drivers). The sheets use the Leonardo pin labels (D0..D13, A0..A5,
+// ICSP-1..ICSP-4).
 //
-// platformio.ini defines BOARD_USES_HW_GPIO_NUMBERS, so the D*/A* constants of the core hold
-// GPIO numbers and no pin remapping happens, also not inside libraries. The static_asserts
-// check each pin against the official Nano ESP32 pinout (ABX00083 full pinout, page 3), so a
-// build with the wrong numbering mode fails here instead of driving the wrong pins.
+// The static_asserts check each pin against the Leonardo variant of the Arduino AVR core
+// (variants/leonardo/pins_arduino.h in framework-arduino-avr 5.4.0, which atmelavr 5.3.0
+// installs), so a build for another board fails here instead of driving the wrong pins.
 #pragma once
 
 #include <Arduino.h>
 
 namespace pins {
 
-// Motor drivers (sheet 02). MOTOR_ENABLE drives 1,2EN and 3,4EN of both L293D chips through
-// R1 (1 kOhm), with R2 (10 kOhm) to GND, so both chips are off while D0 floats.
-// D0 is also UART0 RX of the ESP32-S3.
-constexpr uint8_t MOTOR_ENABLE = D0;
-constexpr uint8_t LEFT_IN1 = D6;   // U2 1A, left track motor
-constexpr uint8_t LEFT_IN2 = D7;   // U2 2A, left track motor
-constexpr uint8_t RIGHT_IN1 = D8;  // U2 3A, right track motor
-constexpr uint8_t RIGHT_IN2 = D9;  // U2 4A, right track motor
-constexpr uint8_t ACT_IN1 = D10;   // U3 1A, PQ12 linear actuator
-// D1 is UART0 TX: the boot ROM prints on it during reset, while MOTOR_ENABLE is still low.
-// The board has a 499 Ohm resistor in series with D1.
-constexpr uint8_t ACT_IN2 = D1;  // U3 2A, PQ12 linear actuator
+// Motor drivers (sheet 02). MOTOR_ENABLE drives 1,2EN and 3,4EN of U2 and 1,2EN of U3 through
+// R1 (1 kOhm), with R2 (10 kOhm) to GND, so both chips are off while D12 floats (also during
+// reset, ATmega32U4 datasheet 7766J section 10.2.1).
+constexpr uint8_t MOTOR_ENABLE = 12;
+// Track motors on U2. Only IN1 of each motor has PWM: D6 is OC4D (Timer4), D11 is OC0A
+// (Timer0). D7 and D9 are plain digital outputs; D9 has no PWM because the Servo library takes
+// Timer1 (D020).
+constexpr uint8_t LEFT_IN1 = 6;    // U2 pin 2 (1A)
+constexpr uint8_t LEFT_IN2 = 7;    // U2 pin 7 (2A)
+constexpr uint8_t RIGHT_IN1 = 11;  // U2 pin 10 (3A)
+constexpr uint8_t RIGHT_IN2 = 9;   // U2 pin 15 (4A)
+// PQ12 linear actuator on U3, digital outputs only (D10 is on Timer1, taken by the Servo
+// library).
+constexpr uint8_t ACT_IN1 = 8;   // U3 pin 2 (1A)
+constexpr uint8_t ACT_IN2 = 10;  // U3 pin 7 (2A)
 
-// Encoders (sheet 01, J12/J13): phase A only. Phase B and Z are not connected.
-constexpr uint8_t ENC_LEFT_A = D2;
-constexpr uint8_t ENC_RIGHT_A = D3;
+// Encoders (sheet 01, J12/J13): phase A only, on external interrupts INT2 (D0) and INT3 (D1).
+// D0/D1 are also Serial1, which the firmware does not use.
+constexpr uint8_t ENC_LEFT_A = 0;
+constexpr uint8_t ENC_RIGHT_A = 1;
 
-// Edge sensors (J7/J8): two VL53L4CD on one I2C bus, with separate shutdown pins.
-constexpr uint8_t TOF_LEFT_XSHUT = D4;
-constexpr uint8_t TOF_RIGHT_XSHUT = D5;
-constexpr uint8_t I2C_SDA = A4;
-constexpr uint8_t I2C_SCL = A5;
+// Edge sensors (J7/J8): two VL53L4CD on the hardware I2C bus (D2 SDA, D3 SCL), each with its
+// own XSHUT pin, driven open-drain (D020). D5 goes to the left sensor (J7) and D4 to the right
+// sensor (J8), as wired on the robot (found on the bench 2026-11-22, D020 pin table).
+constexpr uint8_t TOF_LEFT_XSHUT = 5;
+constexpr uint8_t TOF_RIGHT_XSHUT = 4;
+constexpr uint8_t I2C_SDA = 2;
+constexpr uint8_t I2C_SCL = 3;
 
-// Display (J9): ILI9341 on SPI. RESET is tied to 3V3 through 10 kOhm, and SDO/MISO is not
-// connected. D13 is also LED_BUILTIN, so the LED flickers with the SPI clock.
-constexpr uint8_t TFT_MOSI = D11;
-constexpr uint8_t TFT_SCK = D13;
+// Display (J9): ILI9341 on the hardware SPI of the ICSP header (ICSP-3 SCK, ICSP-4 COPI),
+// through resistor dividers. RESET is tied to 3V3 through R3 (10 kOhm). CIPO (ICSP-1) is not
+// connected.
 constexpr uint8_t TFT_DC = A2;
 constexpr uint8_t TFT_CS = A3;
+constexpr uint8_t TFT_MOSI = MOSI;
+constexpr uint8_t TFT_SCK = SCK;
 
-// IMU: OpenLog Artemis TX into D12 (Serial1 RX). D12 is the default SPI MISO pin, so the
-// display SPI must start without MISO.
-constexpr uint8_t IMU_RX = D12;
-
-// Analog inputs.
-constexpr uint8_t ACT_FEEDBACK = A0;  // PQ12 potentiometer wiper, referenced to 3V3 and GND
-constexpr uint8_t BUTTON_ADC = A1;    // both push buttons on one resistor ladder
+// Analog inputs, referenced to AVCC (the Leonardo 5 V).
+constexpr uint8_t ACT_FEEDBACK = A0;  // PQ12 pot wiper, between GND and +5V_USB (D020)
+constexpr uint8_t BUTTON_ADC = A1;    // button ladder, not documented yet (sheet 01)
 
 // Servo signals (J10/J11), powered from +5V_SERVO.
-constexpr uint8_t BRUSH_SERVO = A6;
-constexpr uint8_t BUCKET_SERVO = A7;
+constexpr uint8_t BRUSH_SERVO = A4;
+constexpr uint8_t BUCKET_SERVO = A5;
 
 }  // namespace pins
 
-static_assert(pins::MOTOR_ENABLE == 44, "D0 must be GPIO44: check BOARD_USES_HW_GPIO_NUMBERS");
-static_assert(pins::ACT_IN2 == 43, "D1 must be GPIO43");
-static_assert(pins::ENC_LEFT_A == 5, "D2 must be GPIO5");
-static_assert(pins::ENC_RIGHT_A == 6, "D3 must be GPIO6");
-static_assert(pins::TOF_LEFT_XSHUT == 7, "D4 must be GPIO7");
-static_assert(pins::TOF_RIGHT_XSHUT == 8, "D5 must be GPIO8");
-static_assert(pins::LEFT_IN1 == 9, "D6 must be GPIO9");
-static_assert(pins::LEFT_IN2 == 10, "D7 must be GPIO10");
-static_assert(pins::RIGHT_IN1 == 17, "D8 must be GPIO17");
-static_assert(pins::RIGHT_IN2 == 18, "D9 must be GPIO18");
-static_assert(pins::ACT_IN1 == 21, "D10 must be GPIO21");
-static_assert(pins::TFT_MOSI == 38, "D11 must be GPIO38");
-static_assert(pins::IMU_RX == 47, "D12 must be GPIO47");
-static_assert(pins::TFT_SCK == 48, "D13 must be GPIO48");
-static_assert(pins::ACT_FEEDBACK == 1, "A0 must be GPIO1");
-static_assert(pins::BUTTON_ADC == 2, "A1 must be GPIO2");
-static_assert(pins::TFT_DC == 3, "A2 must be GPIO3");
-static_assert(pins::TFT_CS == 4, "A3 must be GPIO4");
-static_assert(pins::I2C_SDA == 11, "A4 must be GPIO11");
-static_assert(pins::I2C_SCL == 12, "A5 must be GPIO12");
-static_assert(pins::BRUSH_SERVO == 13, "A6 must be GPIO13");
-static_assert(pins::BUCKET_SERVO == 14, "A7 must be GPIO14");
+static_assert(pins::MOTOR_ENABLE == 12, "MOTOR_ENABLE must be D12");
+static_assert(pins::I2C_SDA == SDA && pins::I2C_SCL == SCL, "I2C must be on D2 (SDA), D3 (SCL)");
+static_assert(pins::TFT_MOSI == 16 && pins::TFT_SCK == 15, "SPI must be on the ICSP header");
+static_assert(pins::ACT_FEEDBACK == 18, "A0 must be pin 18");
+static_assert(pins::BUTTON_ADC == 19, "A1 must be pin 19");
+static_assert(pins::TFT_DC == 20, "A2 must be pin 20");
+static_assert(pins::TFT_CS == 21, "A3 must be pin 21");
+static_assert(pins::BRUSH_SERVO == 22, "A4 must be pin 22");
+static_assert(pins::BUCKET_SERVO == 23, "A5 must be pin 23");
