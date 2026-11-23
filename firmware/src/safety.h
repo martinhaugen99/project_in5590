@@ -23,8 +23,9 @@ bool forward_allowed(Side side);
 // back-away step, which is not written yet, so step 2 refuses every reverse command.
 constexpr bool REVERSE_ALLOWED = false;
 
-// True when the bucket servo may get pulses: both tracks are stopped and neither sensor sees the
-// table (CLAUDE.md, dump interlock).
+// True when the bucket servo may get pulses: both tracks are stopped, and both sensors are live
+// and see no table (CLAUDE.md, dump interlock). A faulted sensor does not count as "past the
+// edge" (D026).
 bool bucket_may_move();
 
 // True when the actuator may move: both tracks are stopped.

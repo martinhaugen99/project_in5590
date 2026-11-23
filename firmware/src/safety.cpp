@@ -60,7 +60,8 @@ bool forward_allowed(Side side) {
 }
 
 bool bucket_may_move() {
-    return tracks_stopped() && !sees_table(Side::LEFT) && !sees_table(Side::RIGHT);
+    return tracks_stopped() && sensor_live(Side::LEFT) && sensor_live(Side::RIGHT) &&
+           !sees_table(Side::LEFT) && !sees_table(Side::RIGHT);
 }
 
 bool actuator_may_move() {
