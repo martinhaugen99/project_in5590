@@ -22,10 +22,41 @@ namespace {
 constexpr uint32_t CONSOLE_WAIT_MS = 2000;
 
 uint32_t last_tick_ms_ = 0;
+// The state of each edge sensor at the last report, so a change prints one line.
+bool sensor_ok_[2] = {true, true};
 
 void report(const __FlashStringHelper* part, bool ok) {
     Serial.print(part);
     Serial.println(ok ? F(": ok") : F(": FAILED"));
+}
+
+// Prints a line when an edge sensor faults or runs again (D026), for example
+// `tof L fault: code 2, own addr no, 0x29 yes` or `tof L recovered`.
+void report_sensor(Side side) {
+    const size_t i = static_cast<size_t>(side);
+    const bool ok = edge_sensors::ok(side);
+    if (ok == sensor_ok_[i]) {
+        return;
+    }
+    sensor_ok_[i] = ok;
+    Serial.print(side == Side::LEFT ? F("tof L") : F("tof R"));
+    if (ok) {
+        Serial.println(F(" recovered"));
+        return;
+    }
+    const EdgeHealth h = edge_sensors::health(side);
+    Serial.print(F(" fault: code "));
+    Serial.print(h.last_code);
+    Serial.print(F(", own addr "));
+    Serial.print(h.own_address ? F("yes") : F("no"));
+    Serial.print(F(", 0x29 "));
+    Serial.println(h.default_address ? F("yes") : F("no"));
+}
+
+// True when no track, no actuator and no edge approach is running, so the loop may block.
+bool nothing_moves() {
+    return tracks::duty(Side::LEFT) == 0 && tracks::duty(Side::RIGHT) == 0 &&
+           actuator::motion() == actuator::Motion::STOP && !edge_approach::active();
 }
 
 }  // namespace
@@ -49,12 +80,9 @@ void setup() {
     servos::begin();
     buttons::begin();
     report(F("edge sensors"), edge_sensors::begin());
-    if (!edge_sensors::ok(Side::LEFT) || !edge_sensors::ok(Side::RIGHT)) {
-        Serial.print(F("  left "));
-        Serial.print(edge_sensors::ok(Side::LEFT) ? F("ok") : F("FAILED"));
-        Serial.print(F(", right "));
-        Serial.println(edge_sensors::ok(Side::RIGHT) ? F("ok") : F("FAILED"));
-    }
+    // A sensor that did not start prints a fault line, and the control tick retries it.
+    report_sensor(Side::LEFT);
+    report_sensor(Side::RIGHT);
     display::begin();
     display::show_text("M.A.T.S");
     console::begin();
@@ -76,6 +104,12 @@ void loop() {
             tracks::set_driver_enable(false);
         }
         edge_sensors::update(now_ms);
+        // A restart blocks the loop, so it runs only while nothing moves (D026).
+        if (nothing_moves()) {
+            edge_sensors::recover(now_ms);
+        }
+        report_sensor(Side::LEFT);
+        report_sensor(Side::RIGHT);
         edge_approach::update(now_ms);
         tracks::update(now_ms);
         actuator::update(now_ms);

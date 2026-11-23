@@ -69,7 +69,7 @@ bool equals(const char* token, const char* text) {
 void print_tof(Side side) {
     const EdgeReading r = edge_sensors::reading(side);
     if (!edge_sensors::ok(side)) {
-        Serial.print(F("failed"));
+        Serial.print(F("FAULT"));
     } else if (!r.valid) {
         Serial.print(F("no data"));
     } else {
@@ -81,6 +81,14 @@ void print_tof(Side side) {
         Serial.print(F(" ms ago)"));
     }
     Serial.print(safety::sees_table(side) ? F(" table") : F(" NO TABLE"));
+    // Errors since the reset, the code of the last one (edge_sensors.h) and the recoveries.
+    const EdgeHealth h = edge_sensors::health(side);
+    Serial.print(F(", err "));
+    Serial.print(h.errors);
+    Serial.print(F(" code "));
+    Serial.print(h.last_code);
+    Serial.print(F(" rec "));
+    Serial.print(h.recoveries);
 }
 
 void print_tof_line() {

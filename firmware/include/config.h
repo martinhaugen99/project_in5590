@@ -43,23 +43,40 @@ constexpr bool LEFT_MOTOR_REVERSED = false;
 constexpr bool RIGHT_MOTOR_REVERSED = true;
 constexpr bool ACT_EXTEND_ON_IN1 = true;
 
-// --- Edge sensors (STM32duino VL53L4CD 1.0.5) -------------------------------------------------
-// The library uses 8-bit I2C addresses, with 0x52 as the default (vl53l4cd_class.h). Each
-// sensor gets its own address at boot through its XSHUT pin.
-constexpr uint8_t TOF_LEFT_ADDRESS = 0x54;
-constexpr uint8_t TOF_RIGHT_ADDRESS = 0x56;
-// I2C fast mode. The VL53L4CD takes up to 1 MHz (DS13812 Rev 8, Table 5), and the
-// ATmega32U4 TWI up to 400 kHz (7766J, section 20). With both boards on the bus, each line has
-// 1.1 kOhm to 3.3 V, which DS13812 Table 3 allows for fast mode up to 270 pF.
-constexpr uint32_t I2C_CLOCK_HZ = 400000;
-// Longest wait for one I2C transfer. 25 ms is the default argument of setWireTimeout() in the
-// AVR Wire library (Wire.h); without the call, the timeout is off (twi.c).
-constexpr uint32_t I2C_TIMEOUT_US = 25000;
+// --- Edge sensors (VL53L4CD) ----------------------------------------------------------------
+// 7-bit I2C addresses. A sensor answers at 0x29 after it boots (DS13812 Rev 8, section 3, gives
+// the 8-bit form 0x52). Each sensor gets its own address at start-up through its XSHUT pin.
+constexpr uint8_t TOF_DEFAULT_ADDRESS = 0x29;
+constexpr uint8_t TOF_LEFT_ADDRESS = 0x2A;
+constexpr uint8_t TOF_RIGHT_ADDRESS = 0x2B;
+// I2C standard mode (D026). The bus has little noise margin: the 3.3 V pull-ups are below the
+// 0.7 VCC = 3.5 V that the ATmega32U4 needs for a high (7766J, Table 29-4). 100 kHz gives the
+// slowest edges and the longest bit times on the long sensor wires. A poll of both sensors then
+// takes about 1 ms, and up to about 5 ms when both have a new result.
+constexpr uint32_t I2C_CLOCK_HZ = 100000;
+// Longest wait for one I2C transfer. The longest transfer in edge_sensors.cpp is a 4-byte write:
+// 7 bytes of 9 bits, about 0.65 ms at 100 kHz. Chosen: 5 ms, so a tick with a failed transfer
+// on both sensors stays well below the motor watchdog (WATCHDOG_MS).
+constexpr uint32_t I2C_TIMEOUT_US = 5000;
+// A sensor counts as faulted after this many failed polls in a row (D026). One failed poll keeps
+// the last reading and tries again in the next tick, and EDGE_STALE_MS still stops a track whose
+// reading gets old. Chosen: 3 polls, 15 ms.
+constexpr uint8_t TOF_FAULT_AFTER = 3;
+// A faulted sensor is restarted at most this often, and only while nothing moves (D026).
+// Chosen: a restart blocks the loop for the start-up of the sensor.
+constexpr uint32_t TOF_RETRY_MS = 1000;
 // The sensor boots in at most 1.2 ms after XSHUT rises (DS13812 Rev 8, section 2.7).
 // Chosen: 2 ms.
 constexpr uint32_t TOF_BOOT_MS = 2;
-// Library range 10-200 ms, library default 50 ms. Tuned in step 2 for the edge reflex.
+// Longest wait for each step of the start-up: the boot, the VHV calibration and the first
+// result. 1000 polls of 1 ms each, the same limit as the wait loops in VL53L4CD_SensorInit() and
+// VL53L4CD_StartRanging() (vl53l4cd_api.cpp, STM32duino VL53L4CD 1.0.5).
+constexpr uint16_t TOF_START_WAIT_MS = 1000;
+// VL53L4CD_SetRangeTiming() accepts 10-200 ms, and its default is 50 ms (vl53l4cd_api.cpp).
+// Tuned in step 2 for the edge reflex.
 constexpr uint32_t TOF_TIMING_BUDGET_MS = 50;
+static_assert(TOF_TIMING_BUDGET_MS >= 10 && TOF_TIMING_BUDGET_MS <= 200,
+              "timing budget outside 10-200 ms");
 // How often the main loop asks each sensor for new data. Chosen: 10 polls per timing budget.
 constexpr uint32_t TOF_POLL_PERIOD_MS = 5;
 
