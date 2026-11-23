@@ -25,12 +25,13 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D017 | 2026-11-21 | Power source: 12 V wall adapter replaces the bench supply | Accepted |
 | D018 | 2026-11-21 | Encoder couplings printed in PLA instead of TPU | Accepted |
 | D019 | 2026-11-22 | Bucket-arm gears: 20-tooth servo gear and 10-tooth rod gear | Accepted |
-| D020 | 2026-11-22 | Microcontroller: Arduino Leonardo replaces the Arduino Nano ESP32 | Accepted |
+| D020 | 2026-11-22 | Microcontroller: Arduino Leonardo replaces the Arduino Nano ESP32 | Accepted; I2C input level corrected by D026 |
 | D021 | 2026-11-22 | Power rails: track motors on the BEC 5.2 V rail, LM2596 at 3.3 V for the edge sensors | Accepted |
 | D022 | 2026-11-22 | Optimization task: squaring up to the table edge replaces the collection rate | Accepted; measure and controller superseded by D025 |
 | D023 | 2026-11-22 | Firmware step 2: edge gate, interlocks and the edge approach | Accepted; handling of a hung loop superseded by D024 |
-| D024 | 2026-11-22 | Motor watchdog in a timer interrupt and one-try edge-sensor reads | Accepted |
+| D024 | 2026-11-22 | Motor watchdog in a timer interrupt and one-try edge-sensor reads | Accepted; fault handling and library start-up superseded by D026 |
 | D025 | 2026-11-22 | Optimization task: how far the brush stops past the table edge | Accepted |
+| D026 | 2026-11-23 | Edge-sensor faults: diagnosis, own sensor start-up and automatic recovery | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -1062,7 +1063,7 @@ Option 2 in both cases. The firmware works like this:
 ## D024: Motor watchdog in a timer interrupt and one-try edge-sensor reads
 
 - **Date:** 2026-11-22
-- **Status:** Accepted
+- **Status:** Accepted; fault handling and library start-up superseded by D026
 - **Decided by:** Martin
 
 ### Context
@@ -1174,6 +1175,127 @@ Option 2:
 - **Stop:** the sketch turns off the motor driver to stop, so the motors coast (D024). Braking may shorten the overshoot and is worth a test.
 - **Part 2:** section 1 of `docs/part_2/README.md` and the poster report the task and the baseline. The duty sweep is future work.
 - **`CLAUDE.md`:** the Should goal, the MVP note and the list of experiments name this task (updated 2026-11-23).
+
+## D026: Edge-sensor faults: diagnosis, own sensor start-up and automatic recovery
+
+- **Date:** 2026-11-23
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+The edge sensors fail, one or both, mostly after the track motors have run. It happens with both programs:
+- **Step 2 firmware (D023, D024):** `tof` shows `failed` after a drive. `edge sensors: FAILED` also sometimes appears at boot.
+- **Yuki's edge test sketch:** `SENSOR INVALID` or `SENSOR DATA STALE` while the tracks run.
+- **In every case,** a reset of the Leonardo brings the sensor back.
+
+**The circuit on the robot** differs from the wiring sheets:
+- R1 and R2 on MOTOR_ENABLE are fitted.
+- The bypass capacitors C1–C4 and the input pull-downs R4–R9 are not.
+- The sensors hang on long jumper wires to the brush bracket, next to the motor wires. Their connectors flex when the brush arm moves.
+- The lab has an oscilloscope and capacitors, but no I2C level shifter and no Arduino Mega 2560.
+
+**The bus has little voltage margin** (datasheets):
+- **The Leonardo reading a high:** SDA and SCL need at least 0.7 VCC, which is 3.5 V at 5 V. The pull-ups go to 3.3 V, so the bus high is 0.2 V below the guaranteed level ([ATmega32U4 datasheet](https://ww1.microchip.com/downloads/en/devicedoc/atmel-7766-8-bit-avr-atmega16u4-32u4_datasheet.pdf) 7766J, Table 29-4). D020 cited the VIH of the general I/O pins (0.2 VCC + 0.9 V, Table 29-1), which does not apply to the I2C pins.
+- **The sensor reading a low:**
+  - The Leonardo pulls a line down to at most 0.4 V at 3 mA (Table 29-4).
+  - The VL53L4CD reads a low only up to 0.6 V, and a high from 1.12 V (DS13812 Rev 8, Table 15).
+  - That leaves 0.2 V. A ground difference between the two boards while the motors draw current takes it away.
+- **The input filter of the ATmega32U4** removes spikes shorter than 50 ns (7766J, section 20.5.1).
+
+**The step 2 firmware turns a glitch into a lasting failure:**
+- **A failed transfer:** one failed transfer marks the sensor failed until the next reset (D024).
+- **A timeout:** `setWireTimeout(…, false)` leaves the TWI state machine busy with the abandoned transfer. Every later transfer waits for `TWI_READY` and times out too (`twi_writeTo()` and `twi_readFrom()` in `twi.c`). So one timeout fails both sensors.
+- **The power order:** D021 plugs in the USB first and the 12 V adapter second. The sensors get their power from the LM2596 on the 12 V adapter. If the 12 V comes in more than about 2 s after the USB (`CONSOLE_WAIT_MS`), the firmware tries to start sensors that have no power. This explains `FAILED` at boot.
+
+**Yuki's sketch counts a range status other than 0 as invalid.** That is a measurement result, not always a circuit fault.
+
+**Flash:** the D024 build uses 28,326 of 28,672 bytes. Link-time optimization is already on (`-flto` in `builder/frameworks/arduino.py` of atmelavr 5.3.0). Trial builds, each with one part removed, give the flash each part takes:
+
+| Part | Flash | RAM |
+|---|---|---|
+| Display stack (Adafruit ILI9341, GFX, SPITFT, BusIO, font) | 8,596 B | 201 B |
+| Serial console | 5,140 B | 170 B |
+| STM32duino VL53L4CD library (start-up only) | 3,184 B | 134 B |
+| Servo library | 1,020 B | 46 B |
+
+### Options
+
+1. **Less noise in hardware:** capacitors at the motors and the drivers, sensor cables twisted with ground and kept away from the motor wires, and a single ground point for the sensors.
+2. **Firmware:** retry a failed poll, report each fault, and restart a faulted sensor. Replace the library start-up with our own bounded code.
+3. **A bidirectional I2C level shifter** (BSS138 or PCA9306), with 5 V on the Leonardo side. It must be ordered.
+4. **A larger board** (Arduino Mega 2560). Not in the lab.
+
+### Choice
+
+Options 1 and 2. Option 3 only if faults remain after the rewiring.
+
+**Firmware** (`firmware/src/edge_sensors.{h,cpp}`, `main.cpp`, `console.cpp`, `safety.cpp`, `firmware/include/config.h`):
+- **Own start-up:** the steps of `InitSensor()`, `VL53L4CD_SensorInit()`, `VL53L4CD_SetRangeTiming()` and `VL53L4CD_StartRanging()` (STM32duino VL53L4CD 1.0.5).
+  - Every transfer gets one try, and every wait is bounded by `TOF_START_WAIT_MS` (1000 ms, the limit of the library's wait loops).
+  - The default configuration is copied with ST's BSD-3-Clause notice.
+  - The library is removed from `lib_deps`.
+  - The addresses are now 7-bit: 0x2A left, 0x2B right, 0x29 default. These are the same addresses as before (0x54, 0x56 and 0x52 in 8-bit form).
+- **Retry:** a failed poll keeps the last reading and tries again in the next tick. After 3 failed polls in a row (`TOF_FAULT_AFTER`), the sensor is faulted. A faulted sensor stops its track through the edge gate and aborts an approach, as before (D023).
+- **Report:** at a fault, the firmware checks whether the sensor answers at its own address and at 0x29. The console prints one line, for example `tof L fault: code 2, own addr no, 0x29 yes`. `tof` shows the error count, the last error code and the number of recoveries. The codes are listed in `edge_sensors.h` and `README.md`.
+- **Bus restart:** after a timeout, the TWI restarts with `Wire.end()` and `Wire.begin()`. The internal 5 V pull-ups are turned off again, and the clock and the timeout are set again.
+- **Recovery:** `edge_sensors::recover()` runs only while no track, no actuator and no approach is moving, at most once per second (`TOF_RETRY_MS`).
+  - A sensor that answers at its own address runs on.
+  - The others are held in shutdown, then restarted one at a time through XSHUT.
+  - The console prints `tof L recovered`. This also starts sensors that had no power at boot.
+- **Bus settings:** I2C at 100 kHz instead of 400 kHz. A Wire timeout of 5 ms instead of 25 ms.
+- **Dump interlock:** `bucket_may_move()` also requires both sensors to be live. Before, a failed sensor counted as "past the edge".
+
+**Hardware, for Yuki's rewiring:**
+1. **Motor capacitors:** a 0.1 µF ceramic across the terminals of each track motor, at the motor. For more suppression, one more from each terminal to the motor case. Twist the two motor leads ([Pololu, "Dealing with Motor Noise"](https://www.pololu.com/docs/0J15/9)).
+2. **C1–C4:** 0.1 µF at the L293D pins, as on sheet 02.
+3. **Bulk capacitor:** an electrolytic of several hundred µF on +5V_SERVO near U2. Negative lead to GND, rated at least twice the rail voltage (Pololu, same page).
+4. **Sensor cables:** one cable per sensor, as short as possible. Twist SDA with a GND wire and SCL with another. Keep them away from the motor and servo wires. Use connectors that lock, with strain relief where the brush arm moves.
+5. **Ground:** the sensor GNDs and LM2596 OUT- join the Leonardo GND at one point. The L293D grounds return straight to the BEC ground, and one wire links the two points.
+6. **R4–R9,** as on sheet 02. They are not the cause of the faults. R2 already stops the motors when the USB comes loose, and R4–R9 are a second safeguard.
+
+### Reasons
+
+- **The likely cause is bus errors from motor noise on a bus with little margin:**
+  - The faults follow motor runs and happen with both programs.
+  - They hit one sensor at a time.
+  - A reset fixes them.
+  - Nothing suppresses the motor noise, and the sensor wires run next to the motor wires.
+  - This is likely, not proven. The fault line tells the causes apart, and the scope test measures the noise.
+- **Tolerating single failures:**
+  - The firmware polls every 5 ms, so a failed check for new data costs one tick.
+  - A failure after the interrupt was cleared loses that result, and the next comes one timing budget later (50 ms).
+  - The stale limit (`EDGE_STALE_MS`, 150 ms) still bounds how long a track can drive on an old reading. Before, one glitch ended the run and needed a reset.
+- **Own start-up code:**
+  - The library retries a failed read forever (D024). A restart at run time could then hang the loop.
+  - It saves 2,178 bytes of flash (28,326 → 26,148 after this step alone).
+- **100 kHz:** the slowest edges and the longest bit times on the long wires. The result rate is set by the 50 ms timing budget, not the bus. A poll of both sensors takes about 1 ms, and up to about 5 ms when both have a new result.
+- **5 ms timeout:**
+  - The longest transfer is a 4-byte write: 7 bytes of 9 bits, about 0.65 ms at 100 kHz.
+  - A tick with a timeout on both sensors plus the two address checks stays near 30 ms, below the 51 ms motor watchdog.
+- **The dump interlock:** a sensor fault must not open the bucket in the middle of the table.
+
+### Consequences
+
+- **Flash and RAM:** 27,080 of 28,672 bytes of flash (1,592 free), and 901 of 2,560 bytes of RAM.
+- **The full firmware on the Leonardo:**
+  - It does not fit with the present libraries and console. Still to come: the dump cycle, seven animated states, the buttons, the reactions and autonomous cleaning.
+  - The display stack (8.6 KB) is the largest item. The faces need only rectangles and circles, so a lean ILI9341 driver for those is the main source of flash. A shorter console is the second.
+  - Decide this when the faces are written.
+- **A restart blocks the loop for the start-up of the sensor.** This happens only while nothing moves, so the motor watchdog is not armed.
+- **Extra drive distance:** a sensor with failed polls can let its track drive up to `EDGE_STALE_MS` on an old reading. Experiment 001 measures the gap at the edge.
+- **D024:** its one-try reads and its motor watchdog stand. "A failed transfer marks the sensor failed until the next reset" and "the library still starts the sensors at boot" are superseded.
+- **D020:** the I2C input level above corrects its note on VIH.
+- **D021:** the power order stays. The firmware now retries the sensors, so a late 12 V no longer needs a reset.
+- **Wiring sheets:**
+  - The motor capacitors, the bulk capacitor and the ground point are not drawn yet.
+  - Update sheets 02 and 03 once Yuki confirms what he fitted.
+  - C1–C4 and R4–R9 are already on sheet 02.
+- **Scope test, before and after each hardware fix:**
+  - Setup: tracks off the ground, `drive B 50 2000`.
+  - Probe ground on the Leonardo GND. CH1 on SDA at the Leonardo. CH2 on the GND pin of one sensor board.
+  - Look for spikes on SDA and SCL, and for the sensor ground moving away from the Leonardo ground.
+- **Bench checks:** `README.md`, edge approach test ladder, step 1.
 
 ## Template
 
