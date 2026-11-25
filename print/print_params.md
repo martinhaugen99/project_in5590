@@ -12,7 +12,7 @@ PLA for all except tracks
 
 - body chassis: 40% infill
 - body lid: 15% infill
-- coupling drive motor encoder(x2): 100% infill - **redesign**
+- coupling drive motor encoder(x2): 100% infill
 - encoder mount(x2): 60% infill
 - motor mount(x2): 60% infill
 
@@ -51,8 +51,8 @@ PLA for all except tracks
 
 - coupling brush linear actuator: 40% infill
 - coupling servo linear actuator: 100% infill
-- coupling servo linear actuator extended: same as above, **PRINT**
-- edge sensor mount: 40% infill, **REPRINT, NEW DESIGN**
-- guide rail: 40% infill, **NEW DESIGN, MAYBE REPRINT**
-- mirrord edge sensor mount: 40% infill, **REPRINT, NEW DESIGN**
+- coupling servo linear actuator extended: 100% infill
+- edge sensor mount: 40% infill
+- guide rail: 40% infill
+- mirrord edge sensor mount: 40% infill
 - servo mount brush: 40% infill

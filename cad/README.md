@@ -109,13 +109,13 @@ git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_
 
 ### Head
 
-- **Back**: good, use heated insert
+- **Back**: good, drill holes for cables
 - **Face**: good
 
 ### Track drive
 
 - **Track**: good
-- **Idler screw**: will use M4 screw
+- **Idler screw**: use M4 screw
 - **Drive sprocket**: good
 - **Idler sprocket**: good
 
@@ -133,6 +133,7 @@ git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_
 
 - **Coupling brush to linear actuator**: good
 - **Coupling servo to linear actuator**: good
+- **Coupling servo to linear actuator extension**: good
 - **Edge sensor mount**: good
 - **Guide rail**: good
 - **Servo mount**: good
