@@ -73,6 +73,10 @@ void setup() {
     while (!Serial && millis() - start_ms < CONSOLE_WAIT_MS) {
         delay(10);
     }
+#ifdef MATS_BENCH_NO_DUMP_INTERLOCK
+    // Bench build (env:leonardo_bench, D027): say so before anything else.
+    Serial.println(F("BENCH BUILD: the bucket ignores the edge sensors (D027)"));
+#endif
 
     tracks::begin();
     safety::begin_watchdog();

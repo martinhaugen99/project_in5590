@@ -32,6 +32,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D024 | 2026-11-22 | Motor watchdog in a timer interrupt and one-try edge-sensor reads | Accepted; fault handling and library start-up superseded by D026 |
 | D025 | 2026-11-22 | Optimization task: how far the brush stops past the table edge | Accepted |
 | D026 | 2026-11-23 | Edge-sensor faults: diagnosis, own sensor start-up and automatic recovery | Accepted |
+| D027 | 2026-11-25 | Bench build without the sensor part of the dump interlock | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -1296,6 +1297,48 @@ Options 1 and 2. Option 3 only if faults remain after the rewiring.
   - Probe ground on the Leonardo GND. CH1 on SDA at the Leonardo. CH2 on the GND pin of one sensor board.
   - Look for spikes on SDA and SCL, and for the sensor ground moving away from the Leonardo ground.
 - **Bench checks:** `README.md`, edge approach test ladder, step 1.
+
+## D027: Bench build without the sensor part of the dump interlock
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+The bench checklist still needs the servo pulses for bucket stowed and bucket lowered (`README.md`, bench checklist step 6). The full build refuses every bucket pulse unless both tracks are stopped and both edge sensors are live and past the edge (`safety::bucket_may_move()`, D023, D026). With no edge sensors connected, the bucket servo cannot be tested at all. D026 asks for the sensor wiring to be redone.
+
+The dump interlock is a Must requirement: the bucket is lowered only when the tracks are stopped and both edge sensors see the edge ahead (`CLAUDE.md`, low-level controller).
+
+### Options
+
+1. A separate PlatformIO environment that builds a relaxed interlock behind a compile-time flag.
+2. A console command that turns the sensor check off at run time.
+3. Keep the full build, and test the bucket with both sensors connected and held past the edge of the bench.
+
+### Choice
+
+Option 1:
+- **`env:leonardo_bench`** in `firmware/platformio.ini` extends `env:leonardo` and adds `-DMATS_BENCH_NO_DUMP_INTERLOCK`.
+- **With the flag,** `bucket_may_move()` returns only `tracks_stopped()`. The sensor checks are left out.
+- **Unchanged in the bench build:** the edge gate, the track lock while the bucket gets pulses (`forward_allowed()`), the actuator interlock, the motor watchdog and the 70 % duty cap.
+- **`default_envs = leonardo`:** a plain build or upload uses only the full build. The bench build needs `-e leonardo_bench`.
+- **Boot line:** the bench build prints `BENCH BUILD: the bucket ignores the edge sensors (D027)` before the other boot messages (`firmware/src/main.cpp`).
+
+### Reasons
+
+- **The relaxed interlock cannot be turned on at run time.** Option 2 would leave it one command away on the table, and it costs flash (1,592 bytes free, D026).
+- **Option 3 ties the servo tests to the sensor wiring,** which D026 is changing.
+- **The edge gate still holds the tracks:** with no sensors connected, no track can drive forward, and reverse is refused (D023). In the setup it is made for, the bench build cannot drive.
+
+### Consequences
+
+- **The risk:** with sensors connected, the bench build lowers the bucket with the robot in the middle of the table. It must never be flashed onto the full robot or run on a table.
+- **The boot line can be missed:** it is lost if the console opens more than 2 s after the boot (`CONSOLE_WAIT_MS`), and the display looks the same in both builds. Flash the full build again as soon as the servo tests are done.
+- **The test ladder runs on the full build only:** in the bench build, its bucket checks would let the bucket move.
+- **Flash and RAM:** the full build is unchanged at 27,080 bytes of flash and 901 bytes of RAM. The bench build uses 27,126 and 901.
+- **D023:** the dump interlock stands for `env:leonardo`.
+- **`README.md`:** the build commands, the `servo` command, the bench checklist and the test ladder name the bench build.
 
 ## Template
 

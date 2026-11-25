@@ -84,6 +84,14 @@ uv run pio device monitor -d firmware      # open the serial console (Ctrl+C to 
 
 The upload opens the USB port at 1200 baud, which restarts the Leonardo into its bootloader, and then waits for the bootloader port to appear (PlatformIO board `leonardo`). Close the serial monitor before uploading.
 
+**Bench build (D027).** A plain build or upload uses only the full build (`env:leonardo`, set by `default_envs`). For servo tests with no edge sensors connected, flash the bench build:
+
+```bash
+uv run pio run -d firmware -e leonardo_bench -t upload   # bench build (hardware action)
+```
+
+In the bench build, the bucket servo needs only the tracks stopped, not both sensors live and past the edge. The edge gate, the track lock while the bucket gets pulses, the actuator interlock, the motor watchdog and the duty cap stay. The bench build prints `BENCH BUILD: the bucket ignores the edge sensors (D027)` first at boot, but only if the console is open within 2 s of the boot, and the display looks the same in both builds. Flash the full build again as soon as the servo tests are done, and never run the bench build on a table.
+
 The build prints the flash and RAM use. The limits are 28,672 bytes of flash and 2,560 bytes of RAM (D020), and step 2 uses 27,080 and 901 bytes (D026). Flash is the tight one: only 1,592 bytes are left. The display libraries take about 8.6 KB and the console about 5.1 KB (D026). Keep float math out of the firmware (track duty is an integer percent), and wrap console strings in `F()` so they stay in flash.
 
 Format the C++ code with `uv run clang-format -i firmware/src/*.cpp firmware/src/*.h firmware/include/*.h`. The pre-commit hook does this on every commit.
@@ -100,7 +108,7 @@ Format the C++ code with `uv run clang-format -i firmware/src/*.cpp firmware/src
 | `drive L\|R\|B <duty> <ms>` | Run the left, right or both tracks for at most 3000 ms. The duty is capped at 70 %. Forward is refused while the sensor ahead of the track does not see the table, and reverse is refused |
 | `enc reset` | Zero the encoder counts |
 | `tof` | Distance and range status of both edge sensors (status 0 = valid), and `table` or `NO TABLE`. Then `err` (failed polls and start-ups since the reset), `code` (the last error, see below) and `rec` (recoveries). `FAULT` means the sensor did not start or failed three polls in a row. The firmware restarts it while nothing moves |
-| `servo brush\|bucket <us>` / `servo brush\|bucket off` | Send a 500–2500 µs pulse, or stop the pulses. The bucket is refused unless both tracks are stopped and both sensors are past the edge, and the tracks are locked while the bucket gets pulses |
+| `servo brush\|bucket <us>` / `servo brush\|bucket off` | Send a 500–2500 µs pulse, or stop the pulses. The bucket is refused unless both tracks are stopped and both sensors are past the edge (in the bench build, only the stopped tracks, D027), and the tracks are locked while the bucket gets pulses |
 | `act extend\|retract <ms>` | Jog the linear actuator at full speed for at most 500 ms. Refused while a track runs, and the tracks are locked while it moves |
 | `btn` | Raw ADC level of the two-button ladder (0–1023) |
 | `face <text>` | One word of text on the display. It blocks the loop while it draws, so the watchdog stops any moving track |
@@ -129,13 +137,13 @@ Do these in order, with the tracks off the ground and a hand near the cut-off sw
 5. **Directions:** put a surface about 50 mm under both sensors, so the edge gate allows forward motion. Then `en 1`, and `drive L 30 500` must move the left track forward, and `drive R 30 500` the right track. `act extend 300` must extend the actuator. If one moves the wrong way, flip `LEFT_MOTOR_REVERSED`, `RIGHT_MOTOR_REVERSED` or `ACT_EXTEND_ON_IN1` in `firmware/include/config.h`. The track directions were checked on 2026-11-22.
 6. **Values measured on 2026-11-22** (D023): `tof` with the brush down and its servo off, about 50 mm on the table and more than 100 mm past the edge; the slowest reliable duty, 50 %; from CAD, 63.25 mm from each sensor point to the front of its track. **Still to measure** for the rest of the dump cycle:
    - Servo pulse in µs for brush down and brush up. Start at 1500 µs and move in small steps.
-   - Servo pulse in µs for bucket stowed and bucket lowered, and what the bucket does after `servo bucket off`.
+   - Servo pulse in µs for bucket stowed and bucket lowered, and what the bucket does after `servo bucket off`. With no edge sensors connected, use the bench build (D027), and flash the full build again afterwards.
    - Actuator feedback (raw) at both ends. Jog in short steps: the PQ12-P has no limit switches, so stop as soon as the value stops changing.
    - `btn` with no button pressed, and with each button pressed.
 
 ### Edge approach test ladder (step 2)
 
-Each step needs the one before it to pass. Keep a hand at the cut-off switch, the brush down with its servo off, and the actuator fully retracted.
+Each step needs the one before it to pass. Keep a hand at the cut-off switch, the brush down with its servo off, and the actuator fully retracted. Run every step on the full build (`env:leonardo`): in the bench build, the bucket checks below would let the bucket move (D027).
 
 1. **Bench, tracks off the ground**, with a board about 50 mm under both sensors (`tof` shows `table` on both sides):
    - `en 1`, then `drive B 50 500`. Both tracks must stop after 500 ms, and the console must still answer. This failed before D024.
