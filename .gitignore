@@ -24,9 +24,6 @@ multirun/
 # macOS
 .DS_Store
 
-# print files
-*.STL
-
 # Raw video (CLAUDE.md: never commit raw video)
 *.mov
 *.MOV
