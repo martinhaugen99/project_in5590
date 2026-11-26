@@ -28,7 +28,8 @@ const char HELP[] PROGMEM =
     " approach [duty %]\n"
     " drive L|R|B <duty %> <ms<=3000>\n"
     " enc reset | tof | btn\n"
-    " servo brush|bucket <500..2500 us>|off\n"
+    " servo brush <500..2500 us>|off\n"
+    " servo bucket <750..2250 us>|off\n"
     " act extend|retract <ms<=500>\n"
     " face <text>\n";
 

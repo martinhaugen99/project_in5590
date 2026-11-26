@@ -30,11 +30,16 @@ constexpr uint32_t ACT_MAX_JOG_MS = 500;
 // datasheet 7766J, Table 15-18; OCR4C resets to 0xFF, section 15.12).
 constexpr uint8_t MOTOR_PWM_MAX = 255;
 
-// --- Servos (DFRobot SER0006) ------------------------------------------------------------------
-// Signal range 500-2500 us, neutral 1500 us (DFRobot product page). The Servo library sends
-// a 20 ms frame (Servo.h, REFRESH_INTERVAL).
-constexpr uint16_t SERVO_MIN_US = 500;
-constexpr uint16_t SERVO_MAX_US = 2500;
+// --- Servos ----------------------------------------------------------------------------------
+// The Servo library sends a 20 ms frame (Servo.h, REFRESH_INTERVAL). Each servo is clamped to
+// its own signal range (D028).
+// Brush arm, DFRobot SER0006: 500-2500 us, neutral 1500 us (DFRobot product page).
+constexpr uint16_t BRUSH_SERVO_MIN_US = 500;
+constexpr uint16_t BRUSH_SERVO_MAX_US = 2500;
+// Bucket arms, Parallax Standard Servo #900-00005: 0.75-2.25 ms high pulse every 20 ms, center
+// 1.5 ms (Parallax datasheet v2.2).
+constexpr uint16_t BUCKET_SERVO_MIN_US = 750;
+constexpr uint16_t BUCKET_SERVO_MAX_US = 2250;
 
 // --- Motor and actuator direction -------------------------------------------------------------
 // Checked on the bench on 2026-11-22 (README.md, bench checklist): `drive L 30 500` and
