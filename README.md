@@ -60,7 +60,7 @@ Both commands update `pyproject.toml` and `uv.lock`. Commit both files together.
 
 ## Firmware
 
-The firmware runs on the Arduino Leonardo (D020) and is built with [PlatformIO](https://docs.platformio.org/), which `uv sync` installs into the project environment (D013). The pins and every wire are drawn in the WireViz sheets in `electronics/wiring/` (D015), and `firmware/include/pins.h` must match them. Render a sheet with `uv run wireviz -f s electronics/wiring/<sheet>.yml`, which needs Graphviz (`brew install graphviz`).
+The firmware runs on the Arduino Leonardo (D020) and is built with [PlatformIO](https://docs.platformio.org/), which `uv sync` installs into the project environment (D013). The pins and every wire are drawn in the WireViz sheets in `electronics/wiring/` (D015), and `firmware/include/pins.h` must match them. Render a sheet with `uv run wireviz -f s electronics/wiring/<sheet>.yml`, which needs Graphviz (`brew install graphviz`). `electronics/wiring/Project_wiring-diagram.svg` is an overview drawn in draw.io. It is not the source of truth, and on 2026-11-26 it differs from the sheets (for example in the XSHUT pins), so wire from the sheets.
 
 **Step 2 (current): edge gate and edge approach (D023).** A serial console tests each part on its own and starts the edge approach for the optimization task (D025). The edge gate is always on: a track drives forward only while the edge sensor ahead of it sees the table, and reverse is refused. A motor watchdog in a timer interrupt turns the drivers off if the control loop stalls for about 51 ms while anything moves (D024). An edge sensor that fails three polls in a row is faulted, which stops its track, and the firmware restarts it while nothing moves (D026). The rest of the dump cycle (lower the bucket, push, stow, back away) comes later.
 
@@ -92,7 +92,7 @@ uv run pio run -d firmware -e leonardo_bench -t upload   # bench build (hardware
 
 In the bench build, the bucket servo needs only the tracks stopped, not both sensors live and past the edge. The edge gate, the track lock while the bucket gets pulses, the actuator interlock, the motor watchdog and the duty cap stay. The bench build prints `BENCH BUILD: the bucket ignores the edge sensors (D027)` first at boot, but only if the console is open within 2 s of the boot, and the display looks the same in both builds. Flash the full build again as soon as the servo tests are done, and never run the bench build on a table.
 
-The build prints the flash and RAM use. The limits are 28,672 bytes of flash and 2,560 bytes of RAM (D020), and step 2 uses 27,080 and 901 bytes (D026). Flash is the tight one: only 1,592 bytes are left. The display libraries take about 8.6 KB and the console about 5.1 KB (D026). Keep float math out of the firmware (track duty is an integer percent), and wrap console strings in `F()` so they stay in flash.
+The build prints the flash and RAM use. The limits are 28,672 bytes of flash and 2,560 bytes of RAM (D020), and step 2 uses 27,206 and 909 bytes (D028). Flash is the tight one: only 1,466 bytes are left. The display libraries take about 8.6 KB and the console about 5.1 KB (D026). Keep float math out of the firmware (track duty is an integer percent), and wrap console strings in `F()` so they stay in flash.
 
 Format the C++ code with `uv run clang-format -i firmware/src/*.cpp firmware/src/*.h firmware/include/*.h`. The pre-commit hook does this on every commit.
 
@@ -108,7 +108,7 @@ Format the C++ code with `uv run clang-format -i firmware/src/*.cpp firmware/src
 | `drive L\|R\|B <duty> <ms>` | Run the left, right or both tracks for at most 3000 ms. The duty is capped at 70 %. Forward is refused while the sensor ahead of the track does not see the table, and reverse is refused |
 | `enc reset` | Zero the encoder counts |
 | `tof` | Distance and range status of both edge sensors (status 0 = valid), and `table` or `NO TABLE`. Then `err` (failed polls and start-ups since the reset), `code` (the last error, see below) and `rec` (recoveries). `FAULT` means the sensor did not start or failed three polls in a row. The firmware restarts it while nothing moves |
-| `servo brush\|bucket <us>` / `servo brush\|bucket off` | Send a 500–2500 µs pulse, or stop the pulses. The bucket is refused unless both tracks are stopped and both sensors are past the edge (in the bench build, only the stopped tracks, D027), and the tracks are locked while the bucket gets pulses |
+| `servo brush\|bucket <us>` / `servo brush\|bucket off` | Send a pulse, or stop the pulses. The pulse is clamped to 500–2500 µs for the brush (SER0006) and 750–2250 µs for the bucket (Parallax Standard Servo, D028). The bucket is refused unless both tracks are stopped and both sensors are past the edge (in the bench build, only the stopped tracks, D027), and the tracks are locked while the bucket gets pulses |
 | `act extend\|retract <ms>` | Jog the linear actuator at full speed for at most 500 ms. Refused while a track runs, and the tracks are locked while it moves |
 | `btn` | Raw ADC level of the two-button ladder (0–1023) |
 | `face <text>` | One word of text on the display. It blocks the loop while it draws, so the watchdog stops any moving track |
@@ -137,7 +137,7 @@ Do these in order, with the tracks off the ground and a hand near the cut-off sw
 5. **Directions:** put a surface about 50 mm under both sensors, so the edge gate allows forward motion. Then `en 1`, and `drive L 30 500` must move the left track forward, and `drive R 30 500` the right track. `act extend 300` must extend the actuator. If one moves the wrong way, flip `LEFT_MOTOR_REVERSED`, `RIGHT_MOTOR_REVERSED` or `ACT_EXTEND_ON_IN1` in `firmware/include/config.h`. The track directions were checked on 2026-11-22.
 6. **Values measured on 2026-11-22** (D023): `tof` with the brush down and its servo off, about 50 mm on the table and more than 100 mm past the edge; the slowest reliable duty, 50 %; from CAD, 63.25 mm from each sensor point to the front of its track. **Still to measure** for the rest of the dump cycle:
    - Servo pulse in µs for brush down and brush up. Start at 1500 µs and move in small steps.
-   - Servo pulse in µs for bucket stowed and bucket lowered, and what the bucket does after `servo bucket off`. With no edge sensors connected, use the bench build (D027), and flash the full build again afterwards.
+   - Servo pulse in µs for bucket stowed and bucket lowered, within 750–2250 µs (Parallax Standard Servo, D028), and what the bucket does after `servo bucket off`. Start at 1500 µs and move in small steps. With no edge sensors connected, use the bench build (D027), and flash the full build again afterwards.
    - Actuator feedback (raw) at both ends. Jog in short steps: the PQ12-P has no limit switches, so stop as soon as the value stops changing.
    - `btn` with no button pressed, and with each button pressed.
 

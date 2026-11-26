@@ -13,7 +13,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted; bench supply superseded by D017, encoder pull-up level by D020, edge-sensor supply by D021 |
 | D006 | 2026-10-22 | Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks | Accepted; encoder coupling superseded by D018 |
 | D007 | 2026-10-22 | Edge sensing: two time-of-flight sensors, one ahead of each track | Accepted |
-| D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted; bucket-arm gears superseded by D019 |
+| D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted; bucket-arm gears superseded by D019, bucket-arm servo by D028 |
 | D009 | 2026-10-22 | Display and the seven states | Accepted; IMU trigger for Surprised superseded by D020 |
 | D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Superseded by D020 (IMU dropped for the demo) |
 | D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
@@ -33,6 +33,7 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D025 | 2026-11-22 | Optimization task: how far the brush stops past the table edge | Accepted |
 | D026 | 2026-11-23 | Edge-sensor faults: diagnosis, own sensor start-up and automatic recovery | Accepted |
 | D027 | 2026-11-25 | Bench build without the sensor part of the dump interlock | Accepted |
+| D028 | 2026-11-26 | Bucket-arm servo: Parallax Standard Servo replaces the SER0006 | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -304,7 +305,7 @@ Edge safety has the highest priority, and M.A.T.S drives to the edge on purpose 
 ## D008: Dump mechanism: servo-driven arms and a linear actuator
 
 - **Date:** 2026-10-22
-- **Status:** Accepted; the 1:1 bucket-arm gears are superseded by D019
+- **Status:** Accepted; the 1:1 bucket-arm gears are superseded by D019, and the SER0006 on the bucket arms by D028
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -1339,6 +1340,55 @@ Option 1:
 - **Flash and RAM:** the full build is unchanged at 27,080 bytes of flash and 901 bytes of RAM. The bench build uses 27,126 and 901.
 - **D023:** the dump interlock stands for `env:leonardo`.
 - **`README.md`:** the build commands, the `servo` command, the bench checklist and the test ladder name the bench build.
+
+## D028: Bucket-arm servo: Parallax Standard Servo replaces the SER0006
+
+- **Date:** 2026-11-26
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+- D008 turns the bucket arms with one DFRobot SER0006 micro servo, and keeps a larger lab servo as the fallback for a weak servo (option 2).
+- D019 gears the rod 20:10, so the rod gets at most half of the servo torque.
+- The SER0006 gives at least 1.0 kg·cm at 4.8 V and 1.3 kg·cm at 6 V ([DFRobot product page](https://www.dfrobot.com/product-255.html)).
+- A bench test on 2026-11-26 showed that the SER0006 could not lift the bucket.
+- The larger lab servo is a Parallax Standard Servo #900-00005 (`bom.csv` item 6).
+
+### Options
+
+1. The Parallax Standard Servo from the lab (D008 option 2).
+2. More torque through the gears (D008 option 3). D019 closed it: the rod gear would have to be larger than the servo gear, and it does not fit inside the body.
+
+### Choice
+
+Option 1: the Parallax Standard Servo turns the bucket arms through the D019 gears. The brush arm keeps its SER0006.
+
+Values from the [Parallax datasheet](https://docs.rs-online.com/0e85/0900766b8123f8d7.pdf) (v2.2, 2011-10-24):
+- **Supply:** 4–6 VDC. The +5V_SERVO rail (5.2 V, D014) is inside the range.
+- **Torque:** 38 oz-in at 6 VDC, about 2.7 kg·cm. The datasheet gives no value at 5.2 V.
+- **Signal:** 0.75–2.25 ms high pulse every 20 ms, 1.5 ms center, 180° range. The input accepts 3.3 V to Vservo + 0.2 V, so the 5 V Leonardo output fits while the rail is at 5.2 V.
+- **Current:** at most 140 ± 50 mA at 6 VDC without load, 15 mA static. No stall current is given.
+- **Leads:** pin 1 white signal, pin 2 red V+, pin 3 black GND, the same order as J11 on wiring sheet 01.
+- **Size and mass:** 44 g, about 2.2 × 0.8 × 1.6 in without the horn. The metric figures in the datasheet (5.58 × 1.9 × 40.6 cm) do not match the inch figures.
+
+### Reasons
+
+- It is in the lab, so nothing has to be ordered four days before the demo.
+- About twice the torque of the SER0006 at 6 V: 2.7 kg·cm against 1.3 kg·cm.
+- It uses the same supply rail and signal pin, so only the part on J11 changes in the wiring.
+
+### Consequences
+
+- **Firmware:** each servo has its own pulse limits in `firmware/include/config.h`: 500–2500 µs for the brush (SER0006) and 750–2250 µs for the bucket (Parallax). `servos.cpp` clamps each servo to its own range. The Servo library stores its limits in 4 µs steps (`Servo.cpp`, `attach()`), so it gets 748–2252 µs for the bucket, and the firmware clamp to 750–2250 µs comes first.
+- **Flash and RAM:** the full build uses 27,206 bytes of flash and 909 bytes of RAM (27,080 and 901 before), and the bench build 27,256 and 909 (27,126 and 901 before). 1,466 bytes of flash are left.
+- **CAD (done on 2026-11-26):** Martin drew a larger servo mount (`cad/bucket_arms/servo_mount_larger.SLDPRT`) and redrew the hub of the servo gear (`cad/bucket_arms/bucket_arms_servo_gear.SLDPRT`) for the output spline of the Parallax. The gear keeps 20 teeth, so the 20:10 ratio of D019 stands. Both parts were printed, and the servo, the mount and the gears fit. The vendor model is `cad/purchased/servo_900_00005.SLDPRT`. The old `servo_mount.SLDPRT` (SER0006) stays in the repository as history.
+- **Torque test (open):** so far only the fit is tested. Repeat the bench torque test of D008 and D019 with the bucket, the ballast and a full load, on the 5.2 V rail. The datasheet gives the torque at 6 V only.
+- **Power budget:** D016 and D021 use 1 A stall current for each servo (SER0006 at 6 V). The Parallax datasheet gives no stall current. The BEC gives 5 A continuously and D021 estimates 3.32 A with both servos at 1 A, so the budget holds if the bucket servo stalls at 2.68 A or less (5 A − 3.32 A + 1 A). Measure its stall current on the bench, and update the estimate in a new entry if it is larger.
+- **Center of gravity:** the servo weighs 44 g. Use this mass in the CAD check of the worst pose (`CLAUDE.md`).
+- **Bench checklist:** measure the bucket pulses for stowed and lowered within 750–2250 µs (`README.md`).
+- **Files:** `bom.csv` items 5 and 6, `CLAUDE.md`, wiring sheet 01 (J11), the lead colors in `.claude/skills/wiring-diagram/SKILL.md`, `README.md`, `cad/README.md` and `print/print_params.md` name the change.
+- **Deliverable 1** shows the SER0006 and stays as it was handed in.
 
 ## Template
 

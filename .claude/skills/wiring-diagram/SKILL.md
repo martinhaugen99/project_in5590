@@ -17,6 +17,11 @@ Source files live in `electronics/wiring/`, one per sheet:
 - `02_drivers.yml`: Arduino Leonardo to both L293D chips, track motors, linear actuator and pull-down resistors.
 - `03_power.yml`: 12 V wall adapter, cut-off switch, LM2596, BEC12S-PRO, laptop USB, and every power and ground wire.
 
+`Project_wiring-diagram.svg` is an overview of the whole robot, drawn by Yuki in draw.io
+(2026-11-26). It is not a source of truth and has no `.yml`: wire from sheets 01–03 (D015).
+On 2026-11-26 it differs from the sheets, for example in the XSHUT pins. Edit it only in
+draw.io, and never change a sheet or `pins.h` to match it.
+
 Render each sheet to SVG next to its source, and commit the `.yml` and the `.svg`:
 
 ```bash
@@ -59,7 +64,8 @@ uv run wireviz -f s electronics/wiring/<sheet>.yml
 - Keep `notes` short and break them into lines with a YAML `|` block. Long lines make the
   boxes, and the whole drawing, very wide.
 - Factory leads keep their real colors: encoder brown +V, blue 0V, black A, white B, orange Z
-  (J12/J13); servo brown GND, red V+ (J10/J11).
+  (J12/J13); brush servo brown GND, red V+ (J10); bucket servo white signal, red V+,
+  black GND (J11, D028).
 - Pins that are not connected stay visible, with a note such as "NC, insulate".
 - Never invent physical values (wire gauge, length, switch rating, currents). Leave them out
   and list them as open questions for Martin.
