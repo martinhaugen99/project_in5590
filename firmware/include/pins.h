@@ -37,7 +37,7 @@ constexpr uint8_t ENC_RIGHT_A = 1;
 // own XSHUT pin, driven open-drain (D020). D5 goes to the left sensor (J7) and D4 to the right
 // sensor (J8), as wired on the robot (found on the bench 2026-11-22, D020 pin table).
 constexpr uint8_t TOF_LEFT_XSHUT = 5;
-constexpr uint8_t TOF_RIGHT_XSHUT = 4;
+constexpr uint8_t TOF_RIGHT_XSHUT = 13;
 constexpr uint8_t I2C_SDA = 2;
 constexpr uint8_t I2C_SCL = 3;
 
