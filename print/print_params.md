@@ -41,8 +41,9 @@ PLA for all except tracks
 - bucket: 40% infill
 - bucket arm right: 40% infill
 - bucket arm left(mirrored): 40% infill
-- servo mount: 60% infill
-- bucket arms servo gear: 100% infill
+- servo mount: 60% infill - replaced by servo mount larger (SER0006 only)
+- servo mount larger: 60% infill - fits the Parallax servo (D028)
+- bucket arms servo gear: 100% infill - hub redrawn for the Parallax servo, fits (D028)
 - rod: 100% infill
 - bucket arms gear rod reduced: 100% infill
 - rod mount: 60% infill

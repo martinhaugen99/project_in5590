@@ -124,10 +124,11 @@ git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_
 - **Bucket**: good
 - **Bucket arm**: good
 - **Spur gear with rod**: good
-- **Spur gear for servo**: good
+- **Spur gear for servo**: good, hub redrawn for the Parallax servo, 20 teeth kept (D028)
 - **Rod**: good
 - **Rod mount**: good
-- **Servo mount**: good
+- **Servo mount**: replaced by the larger servo mount (SER0006 only)
+- **Servo mount larger**: good, fits the Parallax servo (D028)
 
 ### Brush arm
 
