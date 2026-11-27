@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "actuator.h"
-#include "buttons.h"
 #include "config.h"
 #include "display.h"
 #include "edge_approach.h"
@@ -25,11 +24,11 @@ uint32_t last_stream_ms_ = 0;
 const char HELP[] PROGMEM =
     "Step 2: edge gate on, reverse refused.\n"
     " stream on|off | en 0|1 | stop\n"
-    " approach [duty %]\n"
+    " start | approach [duty %]\n"
     " drive L|R|B <duty %> <ms<=3000>\n"
-    " enc reset | tof | btn\n"
+    " enc reset | tof\n"
     " servo brush <500..2500 us>|off\n"
-    " servo bucket <750..2250 us>|off\n"
+    " servo bucket <750..2250 us>|off (arms)\n"
     " act extend|retract <ms<=500>\n"
     " face <text>\n";
 
@@ -104,7 +103,7 @@ void print_stream_header() {
     Serial.println(
         F("t_ms,drivers,duty_l_pct,duty_r_pct,enc_l,enc_r,tof_l_mm,tof_l_status,tof_r_mm,tof_r_"
           "status,"
-          "act_raw,btn_raw,table_l,table_r,run"));
+          "act_raw,table_l,table_r,run"));
 }
 
 void print_stream_line(uint32_t now_ms) {
@@ -131,8 +130,6 @@ void print_stream_line(uint32_t now_ms) {
     Serial.print(right.range_status);
     Serial.print(',');
     Serial.print(actuator::feedback_raw());
-    Serial.print(',');
-    Serial.print(buttons::raw());
     Serial.print(',');
     Serial.print(safety::sees_table(Side::LEFT) ? 1 : 0);
     Serial.print(',');
@@ -214,8 +211,7 @@ void cmd_servo(const char* name_token, const char* value_token) {
     }
     const uint16_t used = servos::set_pulse_us(id, static_cast<uint16_t>(pulse));
     if (used == 0) {
-        Serial.println(
-            F("refused: bucket only with tracks stopped and both sensors past the edge"));
+        Serial.println(F("refused: arms only with both tracks stopped"));
         return;
     }
     Serial.print(F("servo "));
@@ -283,6 +279,10 @@ void run_command(char* line) {
         actuator::stop();
         tracks::set_driver_enable(false);
         Serial.println(F("stopped, drivers off (servos keep their pulses, use `servo ... off`)"));
+    } else if (equals(command, "start")) {
+        // The start trigger: the robot has no buttons (D031). Until the dump cycle is written, it
+        // runs the edge approach at the default duty.
+        edge_approach::start(config::APPROACH_DEFAULT_DUTY_PCT);
     } else if (equals(command, "approach")) {
         long duty = config::APPROACH_DEFAULT_DUTY_PCT;
         if (arg1 != nullptr && !parse_long(arg1, duty)) {
@@ -302,10 +302,6 @@ void run_command(char* line) {
         cmd_servo(arg1, arg2);
     } else if (equals(command, "act")) {
         cmd_act(arg1, arg2);
-    } else if (equals(command, "btn")) {
-        Serial.print(F("btn "));
-        Serial.print(buttons::raw());
-        Serial.println(F(" raw"));
     } else if (equals(command, "face")) {
         if (arg1 != nullptr) {
             display::show_text(arg1);

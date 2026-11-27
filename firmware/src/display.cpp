@@ -3,6 +3,7 @@
 #include <Adafruit_ILI9341.h>
 #include <SPI.h>
 
+#include "config.h"
 #include "pins.h"
 
 namespace {
@@ -17,6 +18,7 @@ namespace display {
 
 void begin() {
     tft_.begin();
+    tft_.setRotation(config::DISPLAY_ROTATION);
 }
 
 void show_text(const char* text) {

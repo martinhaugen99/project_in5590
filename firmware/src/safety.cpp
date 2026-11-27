@@ -60,13 +60,9 @@ bool forward_allowed(Side side) {
 }
 
 bool bucket_may_move() {
-#ifdef MATS_BENCH_NO_DUMP_INTERLOCK
-    // Bench build only (env:leonardo_bench): no edge sensors connected.
+    // The arms carry no bucket (D030), so the edge-sensor check is gone. Until experiment 003 has
+    // measured the arm limits, the arms move only while both tracks are stopped (D031).
     return tracks_stopped();
-#else
-    return tracks_stopped() && sensor_live(Side::LEFT) && sensor_live(Side::RIGHT) &&
-           !sees_table(Side::LEFT) && !sees_table(Side::RIGHT);
-#endif
 }
 
 bool actuator_may_move() {

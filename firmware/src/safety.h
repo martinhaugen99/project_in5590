@@ -1,4 +1,4 @@
-// Safety checks of the low level (D023). The track, bucket-servo and actuator modules ask these
+// Safety checks of the low level (D023). The track, arm-servo and actuator modules ask these
 // checks before they apply a command, so no caller can get around them, the console included.
 #pragma once
 
@@ -15,17 +15,17 @@ bool sensor_live(Side side);
 // config::EDGE_TABLE_MAX_MM. Every other case counts as "no table".
 bool sees_table(Side side);
 
-// True when the track may drive forward: its sensor sees the table, the bucket servo gets no
-// pulses and the actuator is still.
+// True when the track may drive forward: its sensor sees the table, the arm servo (BUCKET) gets
+// no pulses and the actuator is still. The arm part stays until experiment 003 has measured the
+// arm limits (D031).
 bool forward_allowed(Side side);
 
 // The robot may reverse only along the path it has just driven (CLAUDE.md). That needs the
 // back-away step, which is not written yet, so step 2 refuses every reverse command.
 constexpr bool REVERSE_ALLOWED = false;
 
-// True when the bucket servo may get pulses: both tracks are stopped, and both sensors are live
-// and see no table (CLAUDE.md, dump interlock). A faulted sensor does not count as "past the
-// edge" (D026).
+// True when the arm servo (BUCKET) may get pulses: both tracks are stopped. The arms carry no
+// bucket, so the edge sensors are not checked (D030, D031). The name stays (D030).
 bool bucket_may_move();
 
 // True when the actuator may move: both tracks are stopped.

@@ -41,6 +41,13 @@ constexpr uint16_t BRUSH_SERVO_MAX_US = 2500;
 constexpr uint16_t BUCKET_SERVO_MIN_US = 750;
 constexpr uint16_t BUCKET_SERVO_MAX_US = 2250;
 
+// --- Display ---------------------------------------------------------------------------------
+// The head holds the display turned, so the text must be rotated 90° clockwise (D009). In
+// Adafruit ILI9341 1.7.0, setRotation() takes 0-3, and rotations 1 and 3 give a canvas of
+// 320 x 240 pixels (Adafruit_ILI9341.cpp). The library does not say which way each step turns,
+// so 1 is a first guess: set 3 if the text is upside down on the robot (D031).
+constexpr uint8_t DISPLAY_ROTATION = 1;
+
 // --- Motor and actuator direction -------------------------------------------------------------
 // Checked on the bench on 2026-11-22 (README.md, bench checklist): `drive L 30 500` and
 // `drive R 30 500` move each track forward. Flip a flag if a part is rewired.
@@ -95,10 +102,10 @@ constexpr uint32_t LOOP_PERIOD_MS = 5;
 constexpr uint16_t EDGE_TABLE_MAX_MM = 75;
 // A reading older than this counts as "no table". Chosen: three timing budgets.
 constexpr uint32_t EDGE_STALE_MS = 3 * TOF_TIMING_BUDGET_MS;
-// Speed cap for every track command. Chosen, so the edge approach can test 50, 60 and 70 %. The
-// optimization (D025) tunes the duty up to 100 %: raise the cap only after experiment 001 shows
-// a gap at the edge at the new duty.
-constexpr int8_t TRACK_MAX_DUTY_PCT = 70;
+// Speed cap for every track command. Raised from 70 to 100 % in D033: experiment 001 left gaps of
+// 70-75 mm in front of the tracks at 70 % (2026-11-27). Experiment 002 tests 80, 90 and 100 % in
+// that order, and stops raising the duty once a track gap falls below 30 mm.
+constexpr int8_t TRACK_MAX_DUTY_PCT = 100;
 // Default duty of `approach`: the slowest duty that moved the robot reliably on the table with
 // the brush down (measured on 2026-11-22).
 constexpr int8_t APPROACH_DEFAULT_DUTY_PCT = 50;

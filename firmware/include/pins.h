@@ -34,10 +34,11 @@ constexpr uint8_t ENC_LEFT_A = 0;
 constexpr uint8_t ENC_RIGHT_A = 1;
 
 // Edge sensors (J7/J8): two VL53L4CD on the hardware I2C bus (D2 SDA, D3 SCL), each with its
-// own XSHUT pin, driven open-drain (D020). D5 goes to the left sensor (J7) and D4 to the right
-// sensor (J8), as wired on the robot (found on the bench 2026-11-22, D020 pin table).
-constexpr uint8_t TOF_LEFT_XSHUT = 5;
-constexpr uint8_t TOF_RIGHT_XSHUT = 13;
+// own XSHUT pin, driven open-drain (D020). D13 goes to the left sensor (J7) and D5 to the right
+// sensor (J8), as wired on the robot (2026-11-27, D029). D4 is damaged and not used. The
+// bootloader drives D13 up to 5 V for its LED for up to 8 s after a reset (D029).
+constexpr uint8_t TOF_LEFT_XSHUT = 13;
+constexpr uint8_t TOF_RIGHT_XSHUT = 5;
 constexpr uint8_t I2C_SDA = 2;
 constexpr uint8_t I2C_SCL = 3;
 
@@ -49,9 +50,9 @@ constexpr uint8_t TFT_CS = A3;
 constexpr uint8_t TFT_MOSI = MOSI;
 constexpr uint8_t TFT_SCK = SCK;
 
-// Analog inputs, referenced to AVCC (the Leonardo 5 V).
+// Analog input, referenced to AVCC (the Leonardo 5 V). A1 is free: the robot has no buttons, and
+// `start` on the console replaces the start button (D031).
 constexpr uint8_t ACT_FEEDBACK = A0;  // PQ12 pot wiper, between GND and +5V_USB (D020)
-constexpr uint8_t BUTTON_ADC = A1;    // button ladder, not documented yet (sheet 01)
 
 // Servo signals (J10/J11), powered from +5V_SERVO.
 constexpr uint8_t BRUSH_SERVO = A4;
@@ -63,7 +64,6 @@ static_assert(pins::MOTOR_ENABLE == 12, "MOTOR_ENABLE must be D12");
 static_assert(pins::I2C_SDA == SDA && pins::I2C_SCL == SCL, "I2C must be on D2 (SDA), D3 (SCL)");
 static_assert(pins::TFT_MOSI == 16 && pins::TFT_SCK == 15, "SPI must be on the ICSP header");
 static_assert(pins::ACT_FEEDBACK == 18, "A0 must be pin 18");
-static_assert(pins::BUTTON_ADC == 19, "A1 must be pin 19");
 static_assert(pins::TFT_DC == 20, "A2 must be pin 20");
 static_assert(pins::TFT_CS == 21, "A3 must be pin 21");
 static_assert(pins::BRUSH_SERVO == 22, "A4 must be pin 22");

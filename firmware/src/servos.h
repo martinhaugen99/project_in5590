@@ -12,8 +12,9 @@ namespace servos {
 void begin();
 
 // Sends pulses of `pulse_us`, clamped to the signal range of that servo (config.h). Attaches the
-// servo on the first call. Returns the pulse width used, or 0 when the bucket is refused because
-// safety::bucket_may_move() is false. While the bucket gets pulses, the tracks are locked.
+// servo on the first call. Returns the pulse width used, or 0 when the arm servo (BUCKET) is
+// refused because a track is running (safety::bucket_may_move()). While the arm servo gets
+// pulses, the tracks are locked (D031).
 uint16_t set_pulse_us(ServoId id, uint16_t pulse_us);
 
 // Stops the pulses (detaches the servo). How the servo behaves without a signal is a bench

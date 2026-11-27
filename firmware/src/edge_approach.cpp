@@ -178,7 +178,8 @@ bool start(int8_t duty_percent) {
         return false;
     }
     if (!safety::forward_allowed(Side::LEFT) || !safety::forward_allowed(Side::RIGHT)) {
-        Serial.println(F("refused: both sensors must see the table, bucket off, actuator still"));
+        Serial.println(
+            F("refused: both sensors must see the table, arm servo off, actuator still"));
         return false;
     }
 

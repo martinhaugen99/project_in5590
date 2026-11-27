@@ -4,7 +4,6 @@
 #include <Arduino.h>
 
 #include "actuator.h"
-#include "buttons.h"
 #include "config.h"
 #include "console.h"
 #include "display.h"
@@ -73,16 +72,11 @@ void setup() {
     while (!Serial && millis() - start_ms < CONSOLE_WAIT_MS) {
         delay(10);
     }
-#ifdef MATS_BENCH_NO_DUMP_INTERLOCK
-    // Bench build (env:leonardo_bench, D027): say so before anything else.
-    Serial.println(F("BENCH BUILD: the bucket ignores the edge sensors (D027)"));
-#endif
 
     tracks::begin();
     safety::begin_watchdog();
     actuator::begin();
     servos::begin();
-    buttons::begin();
     report(F("edge sensors"), edge_sensors::begin());
     // A sensor that did not start prints a fault line, and the control tick retries it.
     report_sensor(Side::LEFT);
