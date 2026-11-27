@@ -12,33 +12,33 @@ Build window: early October → late November, ending with a public demo Novembe
 Logical architecture. Both layers run in one fixed-rate loop on the single core of the microcontroller (D004, D020):
 ```
 edge sensors (2), encoders, ──► LOW LEVEL ───────────────────► driver chip 1 ──► track motors (rear sprockets)
-actuator position               edge reflex, dump interlock, ──► servo signals ──► brush-arm and bucket-arm servos
+actuator position               edge reflex, interlocks,     ──► servo signal  ──► brush-arm servo
                                 motor, servo and actuator    ──► driver chip 2 ──► linear actuator (brush push)
                                 control, watchdog
                                    ▲ commands     │ state / events
-buttons ──────────────────► HIGH LEVEL: cleaning behavior, emotion state ──► display renderer
+console (USB) ────────────► HIGH LEVEL: cleaning behavior, emotion state ──► display renderer
 ```
 
 ## Requirements (draft)
 
-- **Must:** show at least 7 states that people can tell apart (neutral, working, happy, sad, surprised, scared, angry); drive forward, reverse and turn in place on tracks; detect the table edge and stop or back away before any part of a track leaves the surface, at every reachable speed; run one dump cycle at the press of a button (lower the brush, drive to the edge, square up, lower the bucket, push, stow, back away), with the tracks locked while the bucket is lowered or the brush is pushed forward; reach past the table edge with the bucket, keep it upright and never tip the robot; have a physical switch that cuts motor power.
-- **Should:** clean a table on its own by repeating the dump cycle along different edges; stop with the brush as little past the table edge as possible, with a gap left in front of both tracks, by tuning the approach duty (the optimization task, D025); react to events with the states (dump cycle done, bucket full, picked up, unplanned edge, blocked).
-- **Could:** a camera that finds dirty spots; raise the collection rate to at least 80 % by mass through tuning (future work, D022).
-- **Priority when goals conflict:** edge safety > motor cut-off > cleaning > expression. M.A.T.S drives to the edge on purpose on every dump cycle, so cleaning and edge avoidance conflict all the time, not just in rare cases. The dump cycle never overrides the edge stop or the dump interlock.
+- **Must:** show at least 7 states that people can tell apart (neutral, working, happy, sad, surprised, scared, angry) on the face, since the arms are removed for the demo (D032); drive forward, reverse and turn in place on tracks; detect the table edge and stop or back away before any part of a track leaves the surface, at every reachable speed; run one dump cycle with the `start` command on the console, since the robot has no buttons (D031) (lower the brush, drive to the edge, square up, push the debris over the edge, pull the brush back, back away), with the tracks locked while the brush is pushed forward; have a physical switch that cuts motor power.
+- **Should:** clean a table on its own by repeating the dump cycle along different edges; stop with the brush 16–18 mm before the table edge, so the 20 mm push of the actuator moves it just past the edge, with a gap left in front of both tracks, by tuning the approach duty up to 100 % (the optimization task, D025, D033); react to events with the states (dump cycle done, dump cycle failed (proposed, D030), picked up, unplanned edge, blocked).
+- **Could:** a camera that finds dirty spots; raise the collection rate to at least 80 % by mass through tuning (future work, D022). Without the bucket, the collection rate needs a new measure or is dropped (open, D030).
+- **Priority when goals conflict:** edge safety > motor cut-off > cleaning > expression. M.A.T.S drives to the edge on purpose on every dump cycle, so cleaning and edge avoidance conflict all the time, not just in rare cases. The dump cycle never overrides the edge stop or the brush interlock.
 
 ## Hardware (chosen in D004–D021; verify against the datasheets before relying on it)
 
 | Area | Choice | Decision |
 |---|---|---|
 | Compute architecture | MCU only: both layers in one loop on the single core of the microcontroller. A laptop on USB powers it and logs data | D004, D020 |
-| Microcontroller | [Arduino Leonardo](https://store.arduino.cc/products/arduino-leonardo-with-headers) ([pinout](https://docs.arduino.cc/resources/pinouts/A000057-full-pinout.pdf)): ATmega32U4, 5 V logic, 16 MHz, 28,672 bytes of flash and 2,560 bytes of RAM for sketches, 3V3 pin at most 50 mA. The edge sensors and the display are 3.3 V parts: resistor dividers on the display inputs, XSHUT open-drain, I2C pull-ups only to 3.3 V | D020 |
+| Microcontroller | [Arduino Leonardo](https://store.arduino.cc/products/arduino-leonardo-with-headers) ([pinout](https://docs.arduino.cc/resources/pinouts/A000057-full-pinout.pdf)): ATmega32U4, 5 V logic, 16 MHz, 28,672 bytes of flash and 2,560 bytes of RAM for sketches, 3V3 pin at most 50 mA. The edge sensors and the display are 3.3 V parts: resistor dividers on the display inputs, XSHUT open-drain, I2C pull-ups only to 3.3 V. D4 is damaged and not used. The left XSHUT is on D13, which the bootloader drives up to 5 V (open risk) | D020, D029 |
 | Single-board computer | None for the Must and Should goals | D004 |
-| Display | 2.8" SPI TFT module ([LCDwiki MSP2807](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), touch version, match with the lab board confirmed 2026-11-21; touch not used), [ILI9341](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf) controller, 240 × 320 pixels (board V1.2), in a fixed head. VCC from the Leonardo 5V pin; 3.3 V logic, fed through resistor dividers | D009, D020 |
+| Display | 2.8" SPI TFT module ([LCDwiki MSP2807](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), touch version, match with the lab board confirmed 2026-11-21; touch not used), [ILI9341](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf) controller, 240 × 320 pixels (board V1.2), in a fixed head. VCC from the Leonardo 5V pin; 3.3 V logic, fed through resistor dividers. Works on the robot (2026-11-27). The head holds it turned, so the drawing must be rotated 90° clockwise, which gives a 320 × 240 canvas (not in the firmware yet) | D009, D020 |
 | Dirt detection (Could) | Raspberry Pi 5 with a Raspberry Pi camera | D004 |
 | Edge sensing | 2 × VL53L4CD time-of-flight sensors ([ST SATEL-VL53L4CD](https://no.rs-online.com/web/p/sensor-development-tools/2410906), RS 241-0906) on the brush bracket, one ahead of each track. No rear sensors | D007 |
 | Motors + driver | 2 × [DAGU DG01D 48:1](https://www.sparkfun.com/hobby-gearmotor-140-rpm-pair.html) gearmotors, about 140 RPM without load, suggested 4.5 V; 2 × Yumo E6A2-CW3C encoders, 200 pulses per turn, open collector ([datasheet](https://files.omron.eu/downloads/latest/datasheet/en/e6a2-c_incremental_25-mm-dia._rotary_encoder_datasheet_en.pdf)); 2 × [TI L293DNE](https://www.ti.com/lit/gpn/l293d), one for the track motors, one for the linear actuator | D006 |
 | Tracks | Printed TPU bands with teeth on the inside, printed PLA sprockets with guide ridges, front sprocket in a slotted mount for tension | D006 |
-| Arm actuators | [DFRobot SER0006](https://www.dfrobot.com/product-255.html) micro servo (180°, 500–2500 µs) for the brush arm; [Parallax Standard Servo #900-00005](https://docs.rs-online.com/0e85/0900766b8123f8d7.pdf) (180°, 0.75–2.25 ms, 38 oz-in at 6 V) for the bucket arms; [Actuonix PQ12-100-12-P](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf) linear actuator, 20 mm stroke, 12 V, position feedback | D008, D028 |
+| Arm actuators | [DFRobot SER0006](https://www.dfrobot.com/product-255.html) micro servo (180°, 500–2500 µs) for the brush arm; [Parallax Standard Servo #900-00005](https://docs.rs-online.com/0e85/0900766b8123f8d7.pdf) (180°, 0.75–2.25 ms, 38 oz-in at 6 V) for the bucket arms, which are removed for the demo with the servo unplugged, since it buzzes at every pulse; [Actuonix PQ12-100-12-P](https://cdn.robotshop.com/media/f/fir/rb-fir-42/pdf/actuonix-pq12-datasheet.pdf) linear actuator, 20 mm stroke, 12 V, position feedback | D008, D028, D030, D032 |
 | IMU | None for the demo: the Leonardo has no free serial input. Surprised uses the edge sensors only. The [SparkFun OpenLog Artemis](https://www.sparkfun.com/sparkfun-openlog-artemis.html) stays in the BOM as optional | D010, D020 |
 | Power | 12 V wall adapter (Adapter Tech ATS036T-W120V: 12 V DC, 3 A, 36 W, LPS) for the actuators and the encoders, with a cut-off switch on the robot (SCI R13-66 rocker from the lab, AC ratings only, 10 A 250 VAC); a [Mateksys BEC12S-PRO](https://www.mateksys.com/?portfolio=bec12s-pro) set to 5.2 V for the servos, the track motors and the L293D logic; an LM2596 step-down module set to 3.3 V for the edge sensors, fed before the cut-off switch; laptop USB for the microcontroller and the display. No battery | D005, D014, D016, D017, D021 |
 
@@ -87,7 +87,7 @@ project_in5590/
 
 ## Mission & scope
 
-- Build the MVP first: drive on tracks → edge stop → one dump cycle at the press of a button. The optimization task tunes the approach to the edge, which is part of that cycle: how far the brush stops past the edge (D025). Autonomous cleaning, the collection rate and the reactions come only after the MVP works on a real table.
+- Build the MVP first: drive on tracks → edge stop → one dump cycle, started with `start` on the console. The optimization task tunes the approach to the edge, which is part of that cycle: the brush should stop 16–18 mm before the edge (D025, D033). Autonomous cleaning, the collection rate and the reactions come only after the MVP works on a real table.
 - Every experiment must be traceable to a git commit, its parameters, and the raw data.
 - Declare work complete only when firmware builds without warnings, `uv run ruff format --check .`, `uv run ruff check .`, `uv run mypy` and `uv run pytest -q` pass, and the docs reflect any change in behavior.
 
@@ -169,7 +169,8 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 - Motors stop on invalid sensor readings, and when commands stop arriving (watchdog timeout documented in `docs/`).
 - The speed cap lives in firmware, not only in high-level code.
 - A track may move forward only while the edge sensor ahead of it sees the table. The robot reverses only along the path it has just driven, and never farther than the encoders measured on the way forward.
-- The dump interlock lives in the low level. The bucket is lowered only when the tracks are stopped and both edge sensors see the edge ahead, and the tracks stay locked until the bucket is up and the brush is back.
+- The brush interlock lives in the low level: the tracks are locked while the brush is pushed forward (D023, D030).
+- The arms are removed for the demo, and the arm servo is unplugged from J11 (D032). `servo bucket` is still in the firmware: do not use it. The arm rules for later are in D030.
 - If the USB cable comes loose, pull-down resistors on the driver inputs stop the motors.
 
 ### Inter-board protocol (only if there are two processors, for example when the Could camera on a Raspberry Pi 5 is added)
@@ -178,6 +179,7 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 
 ### Display & emotions
 - The behavior layer sets one state from a single shared enum (the seven states in D009), and the renderer draws it. Rendering never blocks the control loop.
+- The face alone shows the state, since the arms are removed for the demo (D032). The arm poses and animations for later are in D030.
 
 ### Code style
 - Python: type hints, Google-style docstrings, 4-space indents, 88-character lines, f-strings, pathlib over os, ALL_CAPS constants, `_private` methods. Ruff formats, lints and sorts imports (rules: defaults + `I`, `B`, `UP`, `SIM`, `D` with the Google convention). mypy runs in strict mode. Settings live in `pyproject.toml`; change them there, not with inline flags.
@@ -188,19 +190,19 @@ Import sorting is part of `uv run ruff check --fix .` (rule `I`). The global `uv
 - Each CAD module has one owner (`cad/README.md`). Dimensions shared between modules are listed in `docs/cad_parameters.md`, and each part holds them as its own global variables with the same names. No linked equation files (D012).
 - For each printed part, record the printer, material, nozzle, layer height, infill, orientation, supports and tested clearances.
 - Mount the edge sensors ahead of the tracks by more than the *measured* stopping distance at top speed.
-- Keep the center of gravity low and between the tracks, also in the worst pose (bucket lowered past the edge and full, brush pushed forward). Check it in CAD using real component masses.
+- Keep the center of gravity low and between the tracks, also in the worst pose (brush pushed forward). Check it in CAD using real component masses.
 
 ## Testing & validation
 
 - Bring up each component alone on the bench before integrating it.
-- Essential tests: the edge stop triggers at every speed; the watchdog stops the motors; the motors stop when the USB cable comes loose; the dump interlock ignores drive commands while the bucket is lowered or the brush is pushed forward; every state renders; the protocol round-trips (if there are two processors).
+- Essential tests: the edge stop triggers at every speed; the watchdog stops the motors; the motors stop when the USB cable comes loose; the brush interlock ignores drive commands while the brush is pushed forward; every state renders; the protocol round-trips (if there are two processors).
 - Host-side tests in `tests/` mirror the source modules. Use Arrange-Act-Assert, and mark slow or hardware-in-the-loop tests.
 - Each experiment gets `docs/experiments/NNN-name.md`: question, setup, procedure, measured quantity, pass criterion, raw data, result. Candidates:
-  - edge detection across surfaces, lighting and speeds
+  - edge detection across surfaces, lighting and speeds, and the track gaps at each duty (`docs/experiments/001-edge-calibration.md`)
   - stopping distance vs speed
-  - reach, tipping and servo torque of the bucket arms
-  - how far the brush stops past the edge for each approach duty, with both track gaps above zero (the optimization task, D025)
-  - collection rate before and after tuning (future work, D022)
+  - arm limits, speed and servo current (`docs/experiments/003-arm-limits.md`, cancelled by D032)
+  - where the brush stops relative to the edge for each approach duty, aiming for 16–18 mm before it, with both track gaps above zero (the optimization task, D025, D033, `docs/experiments/002-brush-overshoot.md`)
+  - collection rate before and after tuning (future work, D022; needs a new measure without the bucket, D030)
   - whether people recognize each state
 
 ### Experiments with Hydra

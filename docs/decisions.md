@@ -13,8 +13,8 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D005 | 2026-10-21 | Power: 12 V bench supply and laptop USB, no battery | Accepted; bench supply superseded by D017, encoder pull-up level by D020, edge-sensor supply by D021 |
 | D006 | 2026-10-22 | Drive: DC gearmotors with encoders, L293D driver chips, printed TPU tracks | Accepted; encoder coupling superseded by D018 |
 | D007 | 2026-10-22 | Edge sensing: two time-of-flight sensors, one ahead of each track | Accepted |
-| D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted; bucket-arm gears superseded by D019, bucket-arm servo by D028 |
-| D009 | 2026-10-22 | Display and the seven states | Accepted; IMU trigger for Surprised superseded by D020 |
+| D008 | 2026-10-22 | Dump mechanism: servo-driven arms and a linear actuator | Accepted; bucket-arm gears superseded by D019, bucket-arm servo by D028, bucket by D030 |
+| D009 | 2026-10-22 | Display and the seven states | Accepted; IMU trigger for Surprised superseded by D020, Happy and Sad triggers by D030; display rotated in D031 |
 | D010 | 2026-10-22 | IMU: SparkFun OpenLog Artemis | Superseded by D020 (IMU dropped for the demo) |
 | D011 | 2026-10-24 | CAD files in Git LFS with file locks | Accepted |
 | D012 | 2026-10-24 | CAD: module owners and a table of shared dimensions | Accepted |
@@ -25,15 +25,20 @@ Numbered record of project decisions (D001, D002, …). Each entry gives the con
 | D017 | 2026-11-21 | Power source: 12 V wall adapter replaces the bench supply | Accepted |
 | D018 | 2026-11-21 | Encoder couplings printed in PLA instead of TPU | Accepted |
 | D019 | 2026-11-22 | Bucket-arm gears: 20-tooth servo gear and 10-tooth rod gear | Accepted |
-| D020 | 2026-11-22 | Microcontroller: Arduino Leonardo replaces the Arduino Nano ESP32 | Accepted; I2C input level corrected by D026 |
+| D020 | 2026-11-22 | Microcontroller: Arduino Leonardo replaces the Arduino Nano ESP32 | Accepted; I2C input level corrected by D026, XSHUT pins superseded by D029, A1 freed by D031 |
 | D021 | 2026-11-22 | Power rails: track motors on the BEC 5.2 V rail, LM2596 at 3.3 V for the edge sensors | Accepted |
 | D022 | 2026-11-22 | Optimization task: squaring up to the table edge replaces the collection rate | Accepted; measure and controller superseded by D025 |
-| D023 | 2026-11-22 | Firmware step 2: edge gate, interlocks and the edge approach | Accepted; handling of a hung loop superseded by D024 |
+| D023 | 2026-11-22 | Firmware step 2: edge gate, interlocks and the edge approach | Accepted; handling of a hung loop superseded by D024, bucket interlock by D030, speed cap raised to 100 % by D033 |
 | D024 | 2026-11-22 | Motor watchdog in a timer interrupt and one-try edge-sensor reads | Accepted; fault handling and library start-up superseded by D026 |
-| D025 | 2026-11-22 | Optimization task: how far the brush stops past the table edge | Accepted |
+| D025 | 2026-11-22 | Optimization task: how far the brush stops past the table edge | Accepted; target and duty range superseded by D033 |
 | D026 | 2026-11-23 | Edge-sensor faults: diagnosis, own sensor start-up and automatic recovery | Accepted |
-| D027 | 2026-11-25 | Bench build without the sensor part of the dump interlock | Accepted |
-| D028 | 2026-11-26 | Bucket-arm servo: Parallax Standard Servo replaces the SER0006 | Accepted |
+| D027 | 2026-11-25 | Bench build without the sensor part of the dump interlock | Superseded by D030 (no bucket); removed from the firmware in D031 |
+| D028 | 2026-11-26 | Bucket-arm servo: Parallax Standard Servo replaces the SER0006 | Accepted; lifting the bucket superseded by D030 (the servo moves the arms); servo unplugged for the demo (D032) |
+| D029 | 2026-11-27 | Edge-sensor XSHUT pins: D4 damaged, left sensor on D13, right sensor on D5 | Accepted |
+| D030 | 2026-11-27 | Bucket arms without the bucket: the arms move for the animations | Superseded for the demo by D032 (arms removed) |
+| D031 | 2026-11-27 | Firmware step 3: no buttons, `start` on the console, arms move while the tracks are stopped | Accepted; the arm part has no use since D032 |
+| D032 | 2026-11-27 | Arms removed for the demo: the arm servo buzzes at every pulse | Accepted |
+| D033 | 2026-11-27 | Optimization target: the brush stops 16–18 mm before the edge; speed cap raised to 100 % | Accepted |
 
 ## D001: Host-side Python tooling
 
@@ -305,7 +310,7 @@ Edge safety has the highest priority, and M.A.T.S drives to the edge on purpose 
 ## D008: Dump mechanism: servo-driven arms and a linear actuator
 
 - **Date:** 2026-10-22
-- **Status:** Accepted; the 1:1 bucket-arm gears are superseded by D019, and the SER0006 on the bucket arms by D028
+- **Status:** Accepted; the 1:1 bucket-arm gears are superseded by D019, the SER0006 on the bucket arms by D028, and the bucket by D030 (no bucket)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -342,7 +347,7 @@ For the bucket arms:
 ## D009: Display and the seven states
 
 - **Date:** 2026-10-22
-- **Status:** Accepted; the IMU trigger for Surprised is superseded by D020 (IMU dropped)
+- **Status:** Accepted; the IMU trigger for Surprised is superseded by D020 (IMU dropped), and the triggers for Happy and Sad by D030 (no bucket)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -371,6 +376,11 @@ The face is the main way the robot shows its state (topic C: animatronics). The 
 - Recognition test with at least 10 people outside the group.
 - The module is documented on [LCDwiki (MSP2807)](https://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807), with the [ILI9341 datasheet](https://www.lcdwiki.com/res/MSP2807/ILI9341%20Datasheet.pdf). That it is the same board as the lab's module is not yet confirmed (14 pins, 50 × 86 mm board).
 - Confirmed on 2026-11-21: the lab board has 14 pins and measures about 50 × 86 mm, so it is the MSP2807 touch version. The touch controller is not used.
+- **Display on the robot (2026-11-27):**
+  - The display works in the head.
+  - The head holds it turned, so the text must be rotated 90° clockwise to read correctly. The firmware rotates it with `config::DISPLAY_ROTATION` (D031).
+  - `setRotation()` in Adafruit ILI9341 1.7.0 takes 0–3. Rotations 1 and 3 swap the width and the height (`Adafruit_ILI9341.cpp`), so the face canvas becomes 320 × 240 pixels.
+  - The library does not say which way each step turns ("4 cardinal rotations", `Adafruit_GFX.cpp`). Try 1 on the robot, and use 3 if the text is upside down.
 
 ## D010: IMU: SparkFun OpenLog Artemis
 
@@ -747,7 +757,7 @@ Option 3:
 ## D020: Microcontroller: Arduino Leonardo replaces the Arduino Nano ESP32
 
 - **Date:** 2026-11-22
-- **Status:** Accepted
+- **Status:** Accepted; the I2C input level is corrected by D026, the XSHUT pins are superseded by D029, and A1 is freed by D031 (no buttons)
 - **Decided by:** Martin and Yuki
 
 ### Context
@@ -810,6 +820,10 @@ Sources for the pin functions:
 Yuki's list names the right-motor inputs IN3 (D11) and IN4 (D9), after the L293D channels. The net names stay RIGHT_IN1 and RIGHT_IN2, as on the wiring sheets.
 
 XSHUT (updated 2026-11-23): the first version of this table had D4 on the left sensor and D5 on the right. The robot is wired the other way, found on the bench on 2026-11-22. The table, wiring sheet 01 and `firmware/include/pins.h` follow the robot.
+
+XSHUT (superseded on 2026-11-27 by D029): D4 is damaged. The left sensor is now on D13, and the right sensor on D5. The D4 and D13 rows above show the old map.
+
+A1 (superseded on 2026-11-27 by D031): the robot has no buttons, so A1 is free.
 
 Rules for the 3.3 V parts and other changes:
 - **Display:**
@@ -982,7 +996,7 @@ Option 2: we tune the approach duty of the tracks for squaring up to the table e
 ## D023: Firmware step 2: edge gate, interlocks and the edge approach
 
 - **Date:** 2026-11-22
-- **Status:** Accepted; the handling of a hung loop is superseded by D024 (motor watchdog and one-try sensor reads)
+- **Status:** Accepted; the handling of a hung loop is superseded by D024 (motor watchdog and one-try sensor reads), the bucket interlock by D030 (no bucket), and the 70 % speed cap by D033 (100 %)
 - **Decided by:** Martin
 
 ### Context
@@ -1127,7 +1141,7 @@ Options 1 and 2. Option 3 is up to the team.
 ## D025: Optimization task: how far the brush stops past the table edge
 
 - **Date:** 2026-11-22
-- **Status:** Accepted
+- **Status:** Accepted; the target (smallest overshoot) and the duty range are superseded by D033. The brush now stops before the edge, and the target is 16–18 mm before it
 - **Decided by:** Martin
 
 ### Context
@@ -1302,7 +1316,7 @@ Options 1 and 2. Option 3 only if faults remain after the rewiring.
 ## D027: Bench build without the sensor part of the dump interlock
 
 - **Date:** 2026-11-25
-- **Status:** Accepted
+- **Status:** Superseded by D030: there is no bucket, so the risk below is gone. D031 removed the bench build from the firmware
 - **Decided by:** Martin
 
 ### Context
@@ -1344,7 +1358,7 @@ Option 1:
 ## D028: Bucket-arm servo: Parallax Standard Servo replaces the SER0006
 
 - **Date:** 2026-11-26
-- **Status:** Accepted
+- **Status:** Accepted; lifting the bucket is superseded by D030. The Parallax could not lift it either, so the bucket is removed and the servo moves the arms for the animations. The servo is unplugged for the demo, because it buzzes at every pulse (D032)
 - **Decided by:** Martin
 
 ### Context
@@ -1389,6 +1403,382 @@ Values from the [Parallax datasheet](https://docs.rs-online.com/0e85/0900766b812
 - **Bench checklist:** measure the bucket pulses for stowed and lowered within 750–2250 µs (`README.md`).
 - **Files:** `bom.csv` items 5 and 6, `CLAUDE.md`, wiring sheet 01 (J11), the lead colors in `.claude/skills/wiring-diagram/SKILL.md`, `README.md`, `cad/README.md` and `print/print_params.md` name the change.
 - **Deliverable 1** shows the SER0006 and stays as it was handed in.
+
+## D029: Edge-sensor XSHUT pins: D4 damaged, left sensor on D13, right sensor on D5
+
+- **Date:** 2026-11-27
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+- **The fault:** on 2026-11-26, one edge sensor did not work. The D4 pin of the Leonardo was damaged, so its XSHUT wire moved to D13 (commit 805a667).
+- **Now:** on 2026-11-27, both sensors work. On the robot, D13 goes to the XSHUT of the left sensor (J7) and D5 to the right sensor (J8). Martin corrected `firmware/include/pins.h` to match.
+- **Before:** D5 went to the left sensor and D4 to the right sensor (D020, updated 2026-11-23).
+- **Free pins:** D020 left two pins free, D13 (built-in LED) and ICSP-1 (CIPO).
+- **The bootloader drives D13.** The Caterina bootloader of the Leonardo (`bootloaders/caterina/Caterina.c` and `Caterina.h` in framework-arduino-avr, installed by atmelavr 5.3.0) works like this:
+  - `LED_SETUP()` makes PC7 (D13) an output. `LEDPulse()` then switches it high and low, so the L LED fades in and out.
+  - The bootloader runs after an external reset (the reset button) and after the reset that starts an upload. It stays until the upload ends or 8 s pass (`TIMEOUT_PERIOD` 8000, counted in 1 ms Timer1 ticks). After a power-on reset, it starts the sketch at once.
+  - `StartSketch()` sets D13 low before the sketch starts. The left sensor then stays in shutdown until the firmware releases XSHUT.
+- **XSHUT limits of the VL53L4CD** (DS13812 Rev 8, `electronics/DS_vl53l4cd.pdf`):
+  - At most 3.6 V (Table 11, D020).
+  - Table 12: "XSHUT should be high level only when AVDD is on". The I/Os "are internally failsafe with no diode connecting them to AVDD".
+
+### Options
+
+1. D13, the free pin on the side header.
+2. ICSP-1 (CIPO), the other free pin, on the ICSP header with the SPI lines of the display.
+
+### Choice
+
+Option 1:
+- **Left sensor (J7):** XSHUT on D13.
+- **Right sensor (J8):** XSHUT on D5.
+- **D4:** not used.
+
+### Reasons
+
+- D13 sits on the side header with the other sensor wires.
+- It works on the robot (2026-11-27).
+
+### Consequences
+
+- **Open risk: up to 5 V on the left XSHUT while the bootloader runs.**
+  - For up to 8 s after a reset press, and during every upload, D13 is driven up to 5 V. That is above the 3.6 V maximum of XSHUT.
+  - If the 12 V adapter is off at that time, the sensor has no AVDD while XSHUT is high, against the note of Table 12. The LM2596 that feeds the sensors runs on the 12 V adapter (D021).
+  - The sensor works so far. Damage, if any, may show later as a sensor that does not start.
+  - **Rule until the fix is decided:** upload, and press reset, only with the 12 V adapter connected, so the sensor has AVDD. This matches the power order of D021 (USB first, then 12 V). Avoid the reset button.
+  - **Proposed fix, for Martin to decide:** a Schottky diode in the XSHUT line, with the cathode at D13 and the anode at J7 XSHUT.
+    - D13 can then only pull XSHUT low, and the 10 kΩ pull-up on the sensor board gives the high level.
+    - The low level becomes the diode drop plus the low output level of D13. DS13812 Table 15 gives no input levels for XSHUT, so this must be checked on the bench.
+    - The check: `tof` reports the left sensor after boot, and the sensor recovers after its SDA wire is pulled and put back (D026).
+    - If the diode is fitted, draw it on sheet 01.
+- **Check the release level.**
+  - D13 also drives the L LED on the board (D020 pin table).
+  - With power on and the sensors running, measure XSHUT at J7. It should be close to the 3.3 V rail.
+  - If it is much lower, the LED circuit loads the line, and the sensor may not leave shutdown reliably.
+- **D026:** its fault handling and its hardware items stand. It is not known whether the damaged D4 caused some of the faults in D026. Step 1 of the test ladder (ten drives with `stream on`) shows whether faults remain.
+- **D020:** its XSHUT rows are superseded. D13 is no longer free, and D4 cannot be used, so ICSP-1 is the only free pin.
+- **Files:**
+  - `firmware/include/pins.h`: values by Martin, comment updated.
+  - Wiring sheet 01: the U1 pins and the XSHUT connections.
+  - Also `.claude/skills/wiring-diagram/SKILL.md` (example), `bom.csv` item 1 and `README.md` (bench checklist).
+  - Not updated: the draw.io overview `electronics/wiring/Project_wiring-diagram.svg`, which is Yuki's.
+
+## D030: Bucket arms without the bucket: the arms move for the animations
+
+- **Date:** 2026-11-27
+- **Status:** Superseded for the demo by D032: the arm servo buzzes at every pulse, so the arms are removed. The arm poses, animations and limits below stay as future work. Before that, D031 kept the tracks locked while the arms got pulses
+- **Decided by:** Martin
+
+### Context
+
+- **The servo:** D028 put the Parallax Standard Servo on the bucket arms. On the bench, it could not lift the bucket either (Martin, 2026-11-27). The demo is on 2026-11-30.
+- **The requirements this touches** (`CLAUDE.md`):
+  - The dump cycle (Must) lowers the bucket past the edge and pushes the debris into it.
+  - The bucket must reach past the edge, stay upright and never tip the robot.
+  - The dump interlock locks the tracks while the bucket is lowered.
+- **The mechanism:**
+  - Both arms are fixed to one rod, turned by one servo (D008), so they always move together.
+  - The 20:10 gears turn the arms 2° for each degree of the servo (D019).
+  - The Parallax covers 180° over 750–2250 µs (D028). One degree of arm is then about 4.2 µs, if the servo is linear.
+- **Body motion is already part of the plan for the expression** (Deliverable 1, Inspiration):
+  - WALL-E shows emotion "through its large eyes and simple body movements".
+  - The arms move with slow in and slow out.
+- **The edge sensors:**
+  - They look down ahead of the tracks, with an 18° diagonal field of view (DS13812 Rev 8, page 1).
+  - A sensor reads "table" at 75 mm or less (`EDGE_TABLE_MAX_MM`, D023).
+  - An arm in the cone close to a sensor that is past the edge could read as table. The edge gate would then let that track drive.
+- **The cut-off switch also stops the arms:** the servos get their power from the BEC, which is after the switch (sheet 03).
+
+### Options
+
+1. **Take the bucket off.** The arms move for the animations, and the brush pushes the debris over the edge.
+2. **A stronger servo for the bucket.** It must be found or ordered, then fitted and tested, before the demo on 2026-11-30.
+3. **Keep the bucket on the arms as decoration.** The servo cannot lift it, so the arms could not move.
+
+### Choice
+
+Option 1.
+
+**The dump cycle:**
+1. Lower the brush.
+2. Drive to the edge.
+3. Square up.
+4. Push the debris over the edge.
+5. Pull the brush back.
+6. Back away.
+
+The debris falls off the table.
+
+**Arm rules (low level):**
+- **When:** the arms may move at any time, also while the tracks drive.
+- **Hold:** they hold one fixed pose during the edge approach, the square-up and the push. This keeps the runs of the optimization task (D025) comparable, and the arms do not shake the sensors at the edge.
+- **Range:** they stay inside the range measured in experiment 003 (limits L1–L6 below). The servo module clamps every arm pulse to that range, so no animation can go past it.
+- **Keep clear:** they never enter the cone of an edge sensor, and never touch the table, the head, the body or the brush arm.
+- **No blocking:** the motion is computed in the control tick and never blocks the loop.
+- **Track lock:** the tracks are no longer locked while the arm servo gets pulses. They stay locked while the actuator moves the brush (D023).
+- **Names:** they stay as they are: `cad/bucket_arms/`, `pins::BUCKET_SERVO`, `ServoId::BUCKET`, `servo bucket` and J11. No interface is renamed before the demo.
+
+**Poses.** Experiment 003 measures each pose as a servo pulse:
+
+| Pose | Description |
+|---|---|
+| `UP` | Highest safe pose: arms above the head, a margin before any contact |
+| `HIGH` | About halfway between UP and FORWARD |
+| `FORWARD` | Arms pointing forward, about level. Proposed as the hold pose for the approach, the square-up and the push |
+| `REST` | The Neutral pose, chosen by eye between LOW and FORWARD |
+| `LOW` | Lowest safe pose: the tips a margin above the table and outside both sensor cones |
+
+**Animations.** Each move has slow in and slow out unless it is marked sharp. The times and counts are chosen values, to tune on the robot.
+
+| State | Trigger | Arms |
+|---|---|---|
+| Neutral | Waits for the `start` command (D031), or drives with the brush raised | REST. A small, slow sway every few seconds |
+| Working | The brush is down, or a dump cycle is running | Holds FORWARD during the approach, the square-up and the push. Between those steps, slow pumps between FORWARD and HIGH |
+| Happy | It finishes a dump cycle | A quick rise to UP, three fast waves between UP and HIGH, then eases back to REST |
+| Sad | Proposed, to confirm: a dump cycle ends without reaching the edge (approach timeout), or a sensor fault stops it | A slow droop to LOW over about 2 s, then holds |
+| Surprised | It is picked up: both edge sensors see no surface at once (D020) | Snaps to UP at full speed, holds about 1 s, then eases back |
+| Scared | It meets an edge that it did not plan to approach, and the reflex stops it | Fast to HIGH or UP, as if covering the face, with a small fast tremble |
+| Angry | It is blocked: the track motors are driven, but the encoders show no motion | Sharp strokes between FORWARD and HIGH, 3–4 times, a pause, then again |
+
+**Triggers that change** (D009, Deliverable 1 Table 1):
+- **Happy:** "the bucket is emptied and put back" is dropped.
+- **Sad:** "the bucket is full" is replaced by the proposed trigger above.
+
+**Limits.** Experiment 003 (`docs/experiments/003-arm-limits.md`) measures them. Each one becomes a named constant in `firmware/include/config.h` with its source. The same limits hold in every state, also when the robot is picked up.
+
+| # | Limit | Why |
+|---|---|---|
+| L1 | Upper end | No contact with the head or the body |
+| L2 | Lower end | The tips and the arms never touch the table or the brush arm |
+| L3 | Sensor cones | An arm in a cone could make a sensor past the edge read as table |
+| L4 | Pose without pulses | The pose at boot and after `servo bucket off` must also be safe |
+| L5 | Speed | Fast moves must not rock the robot or change a sensor reading |
+| L6 | Current | The BEC budget of D028: stall current at most 2.68 A |
+
+### Reasons
+
+- **No new part,** and nothing to order three days before the demo.
+- **Less load:** without the bucket, the servo only has to move the arms. Experiment 003 checks the current (L6).
+- **Expression:** the arms add body motion to the face, as Deliverable 1 plans (topic C, animatronics).
+- **Comparable runs:** a fixed pose during the approach keeps the measurements of D025 comparable.
+
+### Consequences
+
+- **Requirements (`CLAUDE.md`):**
+  - The dump cycle has no bucket.
+  - The bucket requirements are dropped: reach past the edge, stay upright, and no tipping with the bucket.
+  - The arms take part in showing the states.
+  - "Bucket full" is dropped from the reactions.
+  - The dump interlock becomes the brush interlock (tracks locked while the brush is pushed forward), plus the arm rules above.
+- **Superseded:**
+  - The bucket of D008 (open hooks, ballast, bearings).
+  - The bucket interlock of D023 (`bucket_may_move()`, and the bucket check in `forward_allowed()`).
+  - D027: there is no bucket to lower on the table.
+- **D028:** the Parallax stays on the arms. L6 replaces its torque test. Its power budget stands: a stall current of at most 2.68 A.
+- **D022 and the Could item:**
+  - The collection rate was the mass in the bucket divided by the mass spread (Deliverable 1).
+  - With no bucket, it needs a new measure, or it is dropped. Open, for Martin.
+- **Buttons:** the "bucket emptied" button had no use. Closed by D031: the robot has no buttons, and `start` on the console is the start trigger.
+- **BOM:** items 17 (bearings) and 18 (ballast) are not used.
+- **Center of gravity:** the worst pose is now the arms in their most forward pose, with the brush pushed forward.
+- **CAD and print:** the bucket (`cad/bucket_arms/bucket.SLDPRT`) is not mounted.
+- **The firmware still has the bucket interlock until the firmware step:**
+  - `servo bucket` is refused unless both tracks are stopped and both sensors are past the edge.
+  - The tracks are locked while the arm servo gets pulses.
+  - So experiment 003 runs its tests on the table with the bench build (D027), which also locks the tracks while the arm servo gets pulses.
+- **Firmware next steps** (a separate task):
+  1. Remove `bucket_may_move()` and the bucket check in `forward_allowed()` (`safety.{h,cpp}`), and the refusal message in `console.cpp`.
+  2. Replace the clamp to 750–2250 µs with the arm range of experiment 003 (`config.h`, `servos.cpp`).
+  3. Add the poses. If L5 needs it, add a ramp with a maximum step per control tick.
+  4. Hold the arm pose during the edge approach, the square-up and the push (`edge_approach.cpp`).
+  5. If L4 fails, keep a pulse on the arm servo at all times, from the first tick after boot.
+  6. Remove `env:leonardo_bench` and `MATS_BENCH_NO_DUMP_INTERLOCK` (D027).
+  7. Rotate the display (D009): `setRotation()` in `display::begin()`.
+  8. Check the flash: 1,466 bytes are free (D028). D026 names the display stack and the console as the places to free room for the animations.
+
+  D031 did steps 6 and 7, and the sensor part of step 1. The bucket check in `forward_allowed()` stays until experiment 003 is done, and steps 2–5 follow it.
+- **Files:**
+  - `CLAUDE.md` and `README.md`.
+  - `bom.csv` items 6, 10, 17 and 18.
+  - Wiring sheet 01 (J11 note).
+  - `cad/README.md` and `print/print_params.md`.
+  - `docs/experiments/003-arm-limits.md`.
+- **Deliverable 1** shows the bucket and stays as it was handed in.
+
+## D031: Firmware step 3: no buttons, `start` on the console, arms move while the tracks are stopped
+
+- **Date:** 2026-11-27
+- **Status:** Accepted; the arm part has no use since D032 (arms removed, servo unplugged). The buttons, `start`, the display rotation and the removal of the bench build stand
+- **Decided by:** Martin
+
+### Context
+
+- **No buttons:** the robot has no buttons apart from the cut-off switch.
+  - D020 put a two-button ladder ("start/stop" and "bucket emptied") on A1.
+  - The firmware only read its raw level (`btn`), and the ladder was never drawn on the wiring sheets.
+  - The "bucket emptied" button has had no use since D030.
+- **Experiment 003** (`docs/experiments/003-arm-limits.md`) moves the arms on the table and at the edge.
+  - The full build refused `servo bucket` unless both sensors were past the edge, so the tests needed the bench build (D027).
+- **The arms are not clamped to measured limits yet,** only to the 750–2250 µs of the servo (D028).
+  - D030 lets the arms move at any time, also while the tracks drive.
+  - An arm in the view of an edge sensor could make that sensor read as table.
+- **The display:** it must be rotated 90° clockwise to read correctly in the head (D009).
+
+### Options
+
+**The start trigger:**
+1. A new `start` command on the console.
+2. Keep `approach` as the trigger, and add `start` with the dump cycle.
+
+**The arms until experiment 003 is done:**
+1. Remove the track lock now, as D030 describes.
+2. The arms move whenever both tracks are stopped, and the tracks stay locked while the arm servo gets pulses.
+
+### Choice
+
+Option 1 for the start trigger, and option 2 for the arms. The changes in `firmware/`:
+- **Buttons removed:**
+  - `src/buttons.{h,cpp}` are deleted, together with the `btn` command and the `btn_raw` column of `stream`.
+  - `BUTTON_ADC` is removed from `include/pins.h`, so A1 is free.
+- **`start`:** the start trigger. Until the dump cycle is written, it runs the edge approach at the default duty (`APPROACH_DEFAULT_DUTY_PCT`, 50 %). `approach [duty]` stays for the optimization runs (D025).
+- **Stop:** `stop` on the console, and the cut-off switch.
+- **Arms:**
+  - `safety::bucket_may_move()` now returns only `tracks_stopped()`. The edge-sensor check is gone.
+  - `safety::forward_allowed()` still refuses forward while the arm servo gets pulses.
+  - The names stay (D030).
+- **Bench build:** `env:leonardo_bench` and `MATS_BENCH_NO_DUMP_INTERLOCK` are removed. With the change above, it would be the same as the full build.
+- **Display:**
+  - `display::begin()` calls `setRotation(config::DISPLAY_ROTATION)` with the value 1.
+  - Rotations 1 and 3 give a canvas of 320 × 240 pixels (`Adafruit_ILI9341.cpp`, Adafruit ILI9341 1.7.0).
+  - The library does not say which way each step turns, so 1 is a first guess. Set 3 if the text is upside down on the robot.
+
+### Reasons
+
+- **`start`:** one command that keeps its meaning when the dump cycle is written. The scripts and the tests can use it from now on.
+- **The track lock stays:** experiment 003 runs with the drivers off (`en 0`), so the lock does not hinder any test. Until L3 has shown which arm poses stay out of the sensor views, it keeps the tracks from driving with the arms in an unknown pose.
+- **One build:** a second build that differs only in its name could be flashed by mistake, and costs a line in every flash instruction.
+
+### Consequences
+
+- **Flash and RAM:** 27,146 bytes of flash (1,526 free) and 911 bytes of RAM. Before: 27,206 and 909 (D028).
+- **Requirements (`CLAUDE.md`):** the dump cycle starts with `start` on the console, not with a button.
+- **After experiment 003:** clamp the arms to the measured range, lift the track lock, and add the poses, the ramp and the hold pose (D030, firmware next steps 2–5).
+- **The risk until then:** while the tracks are stopped, `servo bucket` can still move the arms into a sensor view, the table or the robot. The clamp to 750–2250 µs is the servo's range, not the arms'.
+- **`bom.csv`:** item 10 (push buttons) is removed. The other item numbers stay.
+- **Wiring sheet 01:** A1 is removed from U1.
+- **`README.md`:** the bench build, `btn` and the `servo bucket` refusal checks in the test ladder are replaced. Two new checks: the tracks are locked while the arm servo gets pulses, and the arms are refused while a track runs.
+- **Experiment 003** runs on the full build.
+- **D027:** removed from the firmware.
+
+## D032: Arms removed for the demo: the arm servo buzzes at every pulse
+
+- **Date:** 2026-11-27
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+- **The fault,** found by Martin with the step 3 firmware (D031):
+  - The arm servo (Parallax Standard Servo, D028) buzzes at every pulse value it gets.
+  - It goes quiet after `servo bucket off`, when it gets no pulses.
+- **The arms are off:** Martin screwed them off. The servo still buzzes with only the gears and the rod on it.
+- **Not tested:** whether it buzzes with no load at all. Taking the servo out of gear is too much work.
+- **The cause is not found.** Two candidates:
+  - Damage from the stall when the servo tried to lift the bucket (D028), such as a stripped gear or a worn pot.
+  - Binding in the gear mesh or the rod.
+- **Time:** the demo is on 2026-11-30, and there is no time to replace the servo.
+
+### Options
+
+1. Find the cause, then fix or replace the servo.
+2. Remove the arms for the demo and unplug the servo.
+
+### Choice
+
+Option 2:
+- **Arms:** removed for the demo.
+- **Servo:** its lead is unplugged from J11.
+- **Firmware:** unchanged. `servo bucket` stays in the code but must not be used.
+
+### Reasons
+
+- No time to find the cause and fit a new servo before the demo.
+- The face alone can still show the seven states (D009).
+- No reflash is needed, so the next experiments can start at once: 001 (edge calibration) and 002 (the optimization task, D025).
+
+### Consequences
+
+- **Expression:** the face alone shows the states. Body motion (Deliverable 1, Inspiration) is not in the demo.
+- **D030:** its arm poses, animations and limits are not used for the demo. They stay as future work.
+- **Experiment 003:** cancelled.
+- **The track lock on arm pulses (D031)** stays in the firmware. It has no effect while the servo gets no pulses.
+- **Center of gravity:** the worst pose is the brush pushed forward.
+- **Power:** the arm servo draws nothing while it is unplugged.
+- **Next experiments:** `docs/experiments/001-edge-calibration.md` and `docs/experiments/002-brush-overshoot.md`.
+- **Future work, to find the cause:** take the servo out of gear and send pulses. If it is quiet with no load, look at the gears and the rod. If it still buzzes, replace it.
+- **Files:**
+  - `CLAUDE.md` and `README.md`.
+  - `bom.csv` item 6.
+  - Wiring sheet 01 (J11 note).
+  - `cad/README.md`.
+  - `docs/experiments/003-arm-limits.md`.
+
+## D033: Optimization target: the brush stops 16–18 mm before the edge; speed cap raised to 100 %
+
+- **Date:** 2026-11-27
+- **Status:** Accepted
+- **Decided by:** Martin
+
+### Context
+
+- **The old target (D025):** the duty with the smallest brush overshoot past the edge. Debris pushed over the edge was lost before the bucket came down.
+- **No bucket:** since D030 and D032 the robot has no bucket and no arms. The demo still shows the brush push: the robot stops at the edge, then the PQ12 pushes the brush forward. The bucket problems are explained at the demo.
+- **The push:** the PQ12-100 has a 20 mm stroke (D008).
+- **Experiment 001 Part B** (2026-11-27, `docs/experiments/001-edge-calibration.md`):
+  - Every run at 50, 60 and 70 % ended with `done`, with track gaps of 70 mm or more.
+  - The brush stopped 22–39 mm before the edge, because the new sensor mounts look about 40 mm ahead of the brush.
+  - The brush sits about 49 mm ahead of the track fronts (gap plus brush value, run by run).
+  - At 70 %, a full push would leave the brush face 2–4 mm short of the edge.
+- **The speed cap:** D023 set `TRACK_MAX_DUTY_PCT` to 70 %, and allows a higher cap once experiment 001 shows a gap at the edge.
+
+### Options
+
+1. Keep D025 as written: the smallest overshoot. Every duty has none, since the brush stops before the edge.
+2. A target band for the brush, 16–18 mm before the edge, tuned with the approach duty up to 100 %.
+3. Tune the edge threshold instead of the duty. It is limited by the 8 mm margin on the table (001 Part A).
+
+### Choice
+
+Option 2:
+- **Target:** the brush stops 16–18 mm before the edge. The full 20 mm push then moves it 2–4 mm past the edge.
+- **Measured per run, with a ruler:** how far the brush stops before the edge, and the gap from each track front to the edge.
+- **Constraint:** both gaps above 0 in every run (D025).
+- **Stop rule (chosen):** do not try a higher duty once any track gap in a run is below 30 mm. At that gap, the brush is about 19 mm past the edge, far past the target.
+- **Tuned:** the approach duty.
+  - First 80, 90 and 100 %, five runs each, in that order.
+  - Then finer steps between the two duties around the target band. The band is 2 mm wide, and 60 → 70 % moved the brush about 9 mm.
+- **Best:** the duty with the most runs inside the band. Ties go to the mean closest to 17 mm before the edge.
+- **Speed cap:** `TRACK_MAX_DUTY_PCT` goes from 70 to 100 % in one step. The cap applies to `approach` and `drive`. Experiment 002 sets the order of the duties.
+
+### Reasons
+
+- **The demo:** the brush push can be shown even without a bucket.
+- **Close to the target:** 70 % leaves the brush 22–24 mm before the edge, so it needs only about 6 mm more travel. At the target, the track gaps are about 66 mm (49 mm + 17 mm).
+- **Safe to raise:** at 70 % the gaps are still 70–75 mm, and the edge gate still stops each track. One flash saves time before the demo.
+
+### Consequences
+
+- **Firmware:** `TRACK_MAX_DUTY_PCT = 100` in `firmware/include/config.h`. The PWM level at 100 % is 255, which `analogWrite()` turns into a plain high output (`tracks.cpp`, `write_duty()`). Flash and RAM are unchanged: 27,146 and 911 bytes.
+- **D023:** the 70 % cap is superseded.
+- **D025:** the target and the duty range are superseded. Its constraint (both gaps above 0) and its reality-gap points stay.
+- **Experiment 002:** new procedure and target (`docs/experiments/002-brush-overshoot.md`).
+- **The push in the dump cycle is not in the firmware yet.**
+  - `act extend` runs at most 500 ms per command (`ACT_MAX_JOG_MS`), about 5 mm at the no-load speed of 10 mm/s.
+  - The PQ12-P has no limit switches, and its feedback values at both ends are not measured yet (`README.md`, bench checklist step 6).
+  - A full 20 mm push for the demo needs those values and a firmware step.
+- **`CLAUDE.md` and `README.md`** name the new target and the 100 % cap.
 
 ## Template
 

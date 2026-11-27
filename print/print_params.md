@@ -38,7 +38,7 @@ PLA for all except tracks
 
 ## Bucket Arms:
 
-- bucket: 40% infill
+- bucket: 40% infill - not mounted since D030
 - bucket arm right: 40% infill
 - bucket arm left(mirrored): 40% infill
 - servo mount: 60% infill - replaced by servo mount larger (SER0006 only)

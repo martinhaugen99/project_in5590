@@ -121,8 +121,8 @@ git lfs unlock mats.SLDASM body/*.SLDPRT body/*.SLDASM brush_arm/*.SLDPRT brush_
 
 ### Bucket arms
 
-- **Bucket**: good
-- **Bucket arm**: good
+- **Bucket**: good, but not mounted since D030 (the servo cannot lift it, so the arms move for the animations)
+- **Bucket arm**: good, removed for the demo (D032)
 - **Spur gear with rod**: good
 - **Spur gear for servo**: good, hub redrawn for the Parallax servo, 20 teeth kept (D028)
 - **Rod**: good
