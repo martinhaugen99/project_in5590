@@ -56,15 +56,17 @@ connectors:
 
   U1:
     type: Arduino Leonardo (A000057)
-    pins: [3V3, 5V, GND, D0, D1, D2, D3, D4, D5, A1, A2, A3, A4, A5, ICSP-3, ICSP-4]
-    pinlabels: [3V3, 5V, GND, D0 INT2 (RX), D1 INT3 (TX), D2 SDA, D3 SCL, D4, D5, A1,
-                A2 (D20), A3 (D21), A4 (D22), A5 (D23), ICSP-3 SCK, ICSP-4 COPI]
+    pins: [3V3, 5V, GND, D0, D1, D2, D3, D4, D5, D13, A2, A3, A4, A5, ICSP-3, ICSP-4]
+    pinlabels: [3V3, 5V, GND, D0 INT2 (RX), D1 INT3 (TX), D2 SDA, D3 SCL, D4 damaged (NC), D5,
+                D13 (LED), A2 (D20), A3 (D21), A4 (D22), A5 (D23), ICSP-3 SCK, ICSP-4 COPI]
     notes: |
       Pins: A000057 full pinout (D020).
       5 V logic. Powered by laptop micro-USB.
       D6-D12 and A0: sheet 02.
-      D13 (LED) and ICSP-1 (CIPO): free.
-      A1 (BUTTON_ADC): button ladder not documented yet.
+      D4: damaged (2026-11-26), not used (D029).
+      D13: shared with the L LED. The bootloader
+      drives it up to 5 V for up to 8 s (D029).
+      ICSP-1 (CIPO) and A1: free (no buttons, D031).
 
   R3:
     type: Resistor 10 kOhm
@@ -98,6 +100,8 @@ connectors:
       2.2 kOhm I2C pull-ups: R1 to SDA via SB1/SB2,
       R2 to SCL via SB3/SB4. Photo 2026-11-22: 0 Ohm
       links fitted at SB1 and SB3, so both connected.
+      XSHUT from D13. Open risk: 5 V from
+      the bootloader (D029).
       GPIO1 not connected.
 
   J8:
@@ -105,7 +109,7 @@ connectors:
     pins: [1, 2, 3, 4, 5, 6]
     pinlabels: [GND, VDD, SCL, SDA, GPIO1, XSHUT]
     notes: |
-      Same board as J7.
+      Same board as J7. XSHUT from D5 (D029).
       GPIO1 not connected.
 
   J9:
@@ -136,7 +140,9 @@ connectors:
     pinlabels: [Signal, V+, GND]
     notes: |
       4-6 V, 0.75-2.25 ms (Parallax v2.2, D028).
-      Lead: white signal, red V+, black GND
+      Lead: white signal, red V+, black GND.
+      Unplugged for the demo: it buzzes at
+      every pulse, arms removed (D032).
 
   J12:
     type: Omron E6A2-CW3C encoder, left track
@@ -233,7 +239,7 @@ connections:
   - - BUS_GND: [1]
     - W2: [2]
     - J7: [1]
-  - - U1: [D3, D2, D5]
+  - - U1: [D3, D2, D13]
     - W2: [3, 4, 5]
     - J7: [3, 4, 6]
 
@@ -244,7 +250,7 @@ connections:
   - - BUS_GND: [1]
     - W3: [2]
     - J8: [1]
-  - - U1: [D3, D2, D4]
+  - - U1: [D3, D2, D5]
     - W3: [3, 4, 5]
     - J8: [3, 4, 6]
 

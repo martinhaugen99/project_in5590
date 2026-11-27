@@ -13,7 +13,7 @@ It needs Graphviz (`dot`) on the PATH, installed with `brew install graphviz` on
 
 Source files live in `electronics/wiring/`, one per sheet:
 
-- `01_signals.yml`: Arduino Leonardo to edge sensors, display (through dividers), servo signals, buttons and encoders.
+- `01_signals.yml`: Arduino Leonardo to edge sensors, display (through dividers), servo signals and encoders. The robot has no buttons (D031).
 - `02_drivers.yml`: Arduino Leonardo to both L293D chips, track motors, linear actuator and pull-down resistors.
 - `03_power.yml`: 12 V wall adapter, cut-off switch, LM2596, BEC12S-PRO, laptop USB, and every power and ground wire.
 
@@ -111,8 +111,8 @@ Use these unless the real build uses other colors. Then draw the real colors.
 connectors:
   U1:
     type: Arduino Leonardo
-    pins: [D2, D3, D5]
-    pinlabels: [D2 SDA, D3 SCL, D5]
+    pins: [D2, D3, D13]
+    pinlabels: [D2 SDA, D3 SCL, D13 (LED)]
   J7:
     type: SATEL-VL53L4CD (left)
     pinlabels: [GND, VDD, SCL, SDA, GPIO1, XSHUT]
@@ -127,7 +127,7 @@ cables:
 
 connections:
   -
-    - U1: [D2, D3, D5]
+    - U1: [D2, D3, D13]
     - W1: [1-3]
     - J7: [4, 3, 6]
 ```
